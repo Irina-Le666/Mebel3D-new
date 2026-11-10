@@ -1,1 +1,1 @@
-Verify room scale Float dimensions and updated regression assertion.
+Verify enlarged interactive room plan and wall elevation preview.
