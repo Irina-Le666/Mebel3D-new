@@ -14,6 +14,20 @@ class GeometryEngineTest {
         assertTrue(GeometryEngine.validateFurniture(RoomModel(), listOf(item)).any { it.code == GeometryIssueCode.OUT_OF_ROOM })
     }
 
+    @Test fun rotatedFurnitureBoundaryUsesUnroundedMillimetreGeometry() {
+        // The rounded 45-degree footprint is 1416 mm, but its exact half-extent
+        // is slightly greater than 708 mm. A centre at 708 must therefore be rejected.
+        val item = FurnitureItem("edge", "Шкаф", Size3Mm(1001, 1002, 2000), Vec3Mm(708, 1500), 45)
+        assertTrue(GeometryEngine.validateFurniture(RoomModel(), listOf(item))
+            .any { it.code == GeometryIssueCode.OUT_OF_ROOM && it.objectId == "edge" })
+    }
+
+    @Test fun rotatedFurnitureFitsWhenExactFootprintClearsWall() {
+        val item = FurnitureItem("inside", "Шкаф", Size3Mm(1001, 1002, 2000), Vec3Mm(709, 1500), 45)
+        assertTrue(GeometryEngine.validateFurniture(RoomModel(), listOf(item))
+            .none { it.code == GeometryIssueCode.OUT_OF_ROOM })
+    }
+
     @Test fun detectsCollision() {
         val a = FurnitureItem("a", "Стол", Size3Mm(1200, 700, 750), Vec3Mm(2000, 1500))
         val b = FurnitureItem("b", "Стул", Size3Mm(500, 500, 900), Vec3Mm(2100, 1500))
