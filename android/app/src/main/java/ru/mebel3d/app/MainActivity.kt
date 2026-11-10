@@ -62,6 +62,20 @@ private val catalog = InteriorCatalogEngine.entries.map { entry ->
     })
 }
 
+private data class FreePartTool(val name: String, val glyph: String, val size: Size3Mm, val zMm: Int = 0, val materialId: String = "wood-oak")
+private val freePartTools = listOf(
+    FreePartTool("Панель вертикальная", "▯", Size3Mm(600, 18, 2400)),
+    FreePartTool("Панель горизонтальная", "▱", Size3Mm(600, 550, 18)),
+    FreePartTool("Полка", "▬", Size3Mm(600, 500, 18), 900),
+    FreePartTool("Перегородка", "▥", Size3Mm(18, 550, 900)),
+    FreePartTool("Задняя стенка", "▤", Size3Mm(600, 6, 900)),
+    FreePartTool("Фасад", "▭", Size3Mm(600, 18, 700), 0, "paint-matte"),
+    FreePartTool("Выдвижной ящик", "▣", Size3Mm(500, 450, 160), 120),
+    FreePartTool("Штанга", "━", Size3Mm(800, 25, 25), 1700, "metal-chrome"),
+    FreePartTool("Цоколь", "▬", Size3Mm(600, 80, 100)),
+    FreePartTool("Брусок / опора", "▰", Size3Mm(50, 50, 900))
+)
+
 @Composable
 private fun FurnitureHome() {
     var activeSection by remember { mutableStateOf("Помещения") }
@@ -185,16 +199,6 @@ private fun FurnitureHome() {
     var selectedId by remember { mutableStateOf(restored?.furniture?.firstOrNull()?.id) }
     var selectedAssemblyId by remember { mutableStateOf<String?>(null) }
     var selectedAssemblyPartId by remember { mutableStateOf<String?>(null) }
-    var showCabinetCreator by remember { mutableStateOf(false) }
-    var cabinetName by remember { mutableStateOf("Мой шкаф") }
-    var cabinetWidth by remember { mutableStateOf("1800") }
-    var cabinetDepth by remember { mutableStateOf("600") }
-    var cabinetHeight by remember { mutableStateOf("2400") }
-    var cabinetThickness by remember { mutableStateOf("18") }
-    var cabinetBackThickness by remember { mutableStateOf("6") }
-    var cabinetShelfCount by remember { mutableStateOf("4") }
-    var cabinetShelfThickness by remember { mutableStateOf("18") }
-    var cabinetIncludeBack by remember { mutableStateOf(true) }
     var nextObjectId by remember { mutableIntStateOf(1) }
     val selectedItem = placed.firstOrNull { it.id == selectedId && it.roomId == room.id }
 
@@ -314,63 +318,6 @@ private fun FurnitureHome() {
             status = "Импортирован проект: ${opened.name}"
         }.onFailure { status = "Не удалось импортировать проект: ${it.message}" }
     }
-    if (showCabinetCreator) {
-        AlertDialog(
-            onDismissRequest = { showCabinetCreator = false },
-            title = { Text("Создать шкаф по своим размерам") },
-            text = {
-                Column(Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                    Text("Задайте габариты корпуса. После создания боковины, дно, крышка, задняя стенка и полки станут отдельными выбираемыми деталями.", fontSize = 11.sp, color = Muted)
-                    OutlinedTextField(cabinetName, { cabinetName = it }, label = { Text("Название") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        OutlinedTextField(cabinetWidth, { cabinetWidth = it }, label = { Text("Ширина, мм") }, modifier = Modifier.weight(1f), singleLine = true)
-                        OutlinedTextField(cabinetDepth, { cabinetDepth = it }, label = { Text("Глубина, мм") }, modifier = Modifier.weight(1f), singleLine = true)
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        OutlinedTextField(cabinetHeight, { cabinetHeight = it }, label = { Text("Высота, мм") }, modifier = Modifier.weight(1f), singleLine = true)
-                        OutlinedTextField(cabinetThickness, { cabinetThickness = it }, label = { Text("Толщина плит, мм") }, modifier = Modifier.weight(1f), singleLine = true)
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        OutlinedTextField(cabinetBackThickness, { cabinetBackThickness = it }, label = { Text("Задняя стенка, мм") }, modifier = Modifier.weight(1f), singleLine = true)
-                        OutlinedTextField(cabinetShelfCount, { cabinetShelfCount = it }, label = { Text("Количество полок") }, modifier = Modifier.weight(1f), singleLine = true)
-                    }
-                    OutlinedTextField(cabinetShelfThickness, { cabinetShelfThickness = it }, label = { Text("Толщина полок, мм") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = cabinetIncludeBack, onCheckedChange = { cabinetIncludeBack = it })
-                        Text("Добавить заднюю стенку", fontSize = 12.sp)
-                    }
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    runCatching {
-                        val spec = CarcassSpec(
-                            id = "cabinet-${java.util.UUID.randomUUID()}",
-                            name = cabinetName.trim(),
-                            widthMm = cabinetWidth.toInt(),
-                            depthMm = cabinetDepth.toInt(),
-                            heightMm = cabinetHeight.toInt(),
-                            panelThicknessMm = cabinetThickness.toInt(),
-                            backThicknessMm = cabinetBackThickness.toInt(),
-                            shelfCount = cabinetShelfCount.toInt(),
-                            shelfThicknessMm = cabinetShelfThickness.toInt(),
-                            includeBack = cabinetIncludeBack
-                        )
-                        publish(ProjectEditor.createParametricCarcass(session.project, spec))
-                        selectedAssemblyId = spec.id
-                        selectedAssemblyPartId = null
-                        selectedId = null
-                        activeSection = "Конструктор"
-                        mode = "3D"
-                        status = "Создан шкаф «${spec.name}» · ${spec.widthMm} × ${spec.depthMm} × ${spec.heightMm} мм"
-                        showCabinetCreator = false
-                    }.onFailure { status = "Не удалось создать шкаф: ${it.message}" }
-                }) { Text("Создать шкаф") }
-            },
-            dismissButton = { TextButton(onClick = { showCabinetCreator = false }) { Text("Отмена") } }
-        )
-    }
-
     val sections = listOf("Помещения", "Планировка", "Стены и проёмы", "Двери и окна", "Мебель", "Конструктор", "Материалы", "Инженерия", "Размеры и чертежи", "Фото помещения", "Варианты дизайна", "Сохранение")
     val shown = catalog.filter { (category == "Все" || it.category == category) && it.name.contains(query, true) }
 
@@ -746,40 +693,41 @@ private fun FurnitureHome() {
             }
             Column(Modifier.width(if (compactLayout) 165.dp else 205.dp).fillMaxHeight().panel().padding(if (compactLayout) 5.dp else 8.dp)) {
                 if (activeSection == "Конструктор") {
-                    Text("Конструктор мебели", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Ink)
-                    Text("Создавайте корпус под свои размеры и редактируйте каждую деталь отдельно.", fontSize = 9.sp, color = Muted)
-                    Button(onClick = { showCabinetCreator = true }, modifier = Modifier.fillMaxWidth()) { Text("+ Нарисовать шкаф", fontSize = 10.sp) }
+                    Text("Свободный конструктор", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Ink)
+                    Text("Добавляйте детали по одной. Выберите панель, полку или штангу — затем меняйте её прямо на чертеже пальцами.", fontSize = 9.sp, color = Muted)
                     Divider(color = Border, modifier = Modifier.padding(vertical = 5.dp))
-                    Text("Мои сборки · ${session.project.assemblies.size}", fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = Ink)
-                    session.project.assemblies.forEach { assembly ->
-                        Column(Modifier.fillMaxWidth().background(if (selectedAssemblyId == assembly.id) BlueTint else AppBg, RoundedCornerShape(7.dp)).clickable {
-                            selectedAssemblyId = assembly.id
-                            selectedAssemblyPartId = null
-                            selectedId = null
-                            status = "Выбрана сборка: ${assembly.name}"
-                        }.padding(6.dp)) {
-                            Text(assembly.name, fontSize = 10.sp, color = Ink, fontWeight = FontWeight.SemiBold)
-                            Text("${assembly.parts.size} деталей", fontSize = 9.sp, color = Muted)
-                            assembly.parts.forEach { part ->
-                                Text("• ${part.name} · ${part.size.width}×${part.size.depth}×${part.size.height} мм",
-                                    Modifier.fillMaxWidth().background(if (selectedAssemblyPartId == part.id && selectedAssemblyId == assembly.id) Color(0xFFD7E8FF) else Color.Transparent, RoundedCornerShape(4.dp)).clickable {
-                                        selectedAssemblyId = assembly.id
-                                        selectedAssemblyPartId = part.id
-                                        selectedId = null
-                                        selected = part.name
-                                        width = part.size.width.toString()
-                                        depth = part.size.depth.toString()
-                                        height = part.size.height.toString()
-                                        posX = part.localPosition.x.toString()
-                                        posY = part.localPosition.y.toString()
-                                        posZ = part.localPosition.z.toString()
-                                        angle = part.rotationDeg.toString()
-                                    }.padding(3.dp), fontSize = 8.sp, color = Ink)
+                    Text("ДЕТАЛИ ДЛЯ ПОСТРОЕНИЯ", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Muted)
+                    LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                        items(freePartTools.filter { query.isBlank() || it.name.contains(query, true) }) { tool ->
+                            Column(Modifier.fillMaxWidth().border(1.dp, if (selected == tool.name) Blue else Border, RoundedCornerShape(9.dp))
+                                .background(if (selected == tool.name) BlueTint else Color(0xFFFAFBFE), RoundedCornerShape(9.dp))
+                                .clickable {
+                                    val id = "part-${java.util.UUID.randomUUID()}"
+                                    val x = ((room.widthMm - tool.size.width) / 2).coerceAtLeast(0)
+                                    val y = ((room.depthMm - tool.size.depth) / 2).coerceAtLeast(0)
+                                    val z = tool.zMm.coerceIn(0, (room.heightMm - tool.size.height).coerceAtLeast(0))
+                                    val part = FurnitureItem(id, tool.name, tool.size, Vec3Mm(x, y, z), materialId = tool.materialId, roomId = room.id)
+                                    publish(session.project.copy(furniture = session.project.furniture + part))
+                                    selected = tool.name
+                                    selectedId = id
+                                    selectedAssemblyId = null
+                                    selectedAssemblyPartId = null
+                                    width = tool.size.width.toString(); depth = tool.size.depth.toString(); height = tool.size.height.toString()
+                                    posX = x.toString(); posY = y.toString(); posZ = z.toString(); angle = "0"
+                                    mode = "3D"
+                                    status = "Добавлена деталь «${tool.name}». Выделите её на поле и растягивайте маркеры размера."
+                                }.padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(Modifier.fillMaxWidth().height(38.dp).background(Color(0xFFF0F2F5), RoundedCornerShape(6.dp)), contentAlignment = Alignment.Center) {
+                                    Text(tool.glyph, fontSize = 24.sp, color = Ink)
+                                }
+                                Text(tool.name, fontSize = 9.sp, color = Ink, maxLines = 2)
+                                Text("${tool.size.width}×${tool.size.depth}×${tool.size.height}", fontSize = 8.sp, color = Muted, maxLines = 1)
                             }
                         }
                     }
-                    if (session.project.assemblies.isEmpty()) Text("Здесь появятся ваши шкафы и другие созданные сборки.", fontSize = 9.sp, color = Muted)
                     Divider(color = Border, modifier = Modifier.padding(vertical = 5.dp))
+                    Text("В проекте: ${session.project.furniture.count { it.roomId == room.id }} отдельных деталей", fontSize = 9.sp, color = Muted)
+                    Text("Копирование и удаление — в свойствах выбранной детали.", fontSize = 8.sp, color = Muted)
                 }
                 if (activeSection == "Планировка") {
                     Text("Умная расстановка", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Ink)
