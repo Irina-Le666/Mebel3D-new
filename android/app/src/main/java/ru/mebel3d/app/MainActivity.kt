@@ -1392,7 +1392,6 @@ private fun FurnitureHome() {
                     }.onFailure { status = "Поворот отклонён: ${it.message}" } }
                 }, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(6.dp)) { Text("Повернуть на 90°", fontSize = 10.sp) }
                 OutlinedButton(onClick = {
-                OutlinedButton(onClick = {
                     selectedItem?.let { item -> runCatching {
                         val copyId = "item-" + java.util.UUID.randomUUID().toString()
                         publish(ProjectEditor.duplicateFurniture(session.project, item.id, copyId))
