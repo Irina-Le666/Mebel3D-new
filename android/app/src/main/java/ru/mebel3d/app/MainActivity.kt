@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
@@ -649,7 +650,7 @@ private fun FurnitureHome() {
     }
 
     Column(Modifier.fillMaxSize().background(AppBg).padding(7.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-        Row(Modifier.fillMaxWidth().height(52.dp).panel(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+        Row(Modifier.fillMaxWidth().height(52.dp).panel().horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             Column(Modifier.width(175.dp).padding(start = 12.dp)) {
                 Text("Мебель 3D", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Ink)
                 Text(status, fontSize = 10.sp, color = Muted, maxLines = 1)
@@ -686,7 +687,7 @@ private fun FurnitureHome() {
                     Divider(color = Border, modifier = Modifier.padding(vertical = 4.dp))
                 }
                 OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth().height(52.dp), singleLine = true, placeholder = { Text("Поиск мебели…", fontSize = 11.sp) })
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(vertical = 6.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 6.dp)) {
                     (listOf("Все") + catalog.map { it.category }.distinct()).forEach { c ->
                         Text(c, Modifier.background(if (category == c) BlueTint else AppBg, RoundedCornerShape(16.dp)).clickable { category = c }.padding(horizontal = 7.dp, vertical = 6.dp), fontSize = 10.sp, color = if (category == c) Blue else Ink)
                     }
@@ -1029,7 +1030,7 @@ private fun FurnitureHome() {
                 }
             }
             Column(Modifier.width(210.dp).fillMaxHeight().panel().padding(10.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text(selected, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Ink)
+                Text(selectedItem?.name ?: "Объект не выбран", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Ink)
                 if (activeSection == "Размеры и чертежи") {
                     val drawings = remember(room, visibleFurniture) { RoomDrawingProjection.build(room, visibleFurniture) }
                     val plan = drawings.plan
