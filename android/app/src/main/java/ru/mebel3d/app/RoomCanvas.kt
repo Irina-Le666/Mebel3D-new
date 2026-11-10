@@ -132,7 +132,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                         val part = assemblies.firstOrNull { it.id == ids[0] }?.parts?.firstOrNull { it.id == ids.getOrNull(1) }
                         val assembly = assemblies.firstOrNull { it.id == ids[0] }
                         if (part != null && assembly != null) {
-                            val scale = roomSceneScale(size.width, size.height, room, cameraYaw, cameraPitch, cameraZoom, is3d)
+                            val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
                             val cx = size.width * 0.5f; val cy = size.height * if (is3d) 0.58f else 0.5f
                             val partCx = assembly.position.x + part.localPosition.x + part.size.width / 2f
                             val partCy = assembly.position.y + part.localPosition.y + part.size.depth / 2f
@@ -170,7 +170,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                         val item = furniture.firstOrNull { it.id == selectedId }
                         val gesture = rotationGesture
                         if (item != null && gesture != null) {
-                            val vector = toRoomVector(dragPointer-furnitureGestureCenter, roomSceneScale(size.width, size.height, room, cameraYaw, cameraPitch, cameraZoom, is3d))
+                            val vector = toRoomVector(dragPointer-furnitureGestureCenter, roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d))
                             runCatching { onRotateSelectedFurniture(ru.mebel3d.app.core.SceneGestureTransform.rotationAt(gesture, vector.first, vector.second, 1)) }
                         }
                         return@detectDragGestures
@@ -179,7 +179,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                         val item = furniture.firstOrNull { it.id == selectedId }
                         val gesture = heightGesture
                         if (item != null && gesture != null) {
-                            val scale = roomSceneScale(size.width, size.height, room, cameraYaw, cameraPitch, cameraZoom, is3d)
+                            val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
                             val target = ru.mebel3d.app.core.SceneGestureTransform.heightAt(gesture, dragPointer.y-dragStartPointer.y, scale, is3d, room.heightMm-item.position.z, cameraPitch)
                             onChangeSelectedFurnitureHeight(target)
                         }
@@ -187,7 +187,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                     }
                     if (selectedPartKey != null) {
                         val ids = selectedPartKey.split(":", limit = 2)
-                        val scale = roomSceneScale(size.width, size.height, room, cameraYaw, cameraPitch, cameraZoom, is3d)
+                        val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
                         if (partRotationHandleActive && ids.size == 2) {
                             val gesture = partRotationGesture
                             if (gesture != null) {
@@ -229,7 +229,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                             onResizeSelectedPart(ids[0], ids[1], localDx.toInt(), localDy.toInt())
                         } else onMoveSelectedPart(ids[0], ids[1], worldDx.toInt(), worldDy.toInt())
                     } else if (selectedId != null) {
-                        val scale = roomSceneScale(size.width, size.height, room, cameraYaw, cameraPitch, cameraZoom, is3d)
+                        val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
                         if (furnitureResizeHandleActive) {
                             val item = furniture.firstOrNull { it.id == selectedId }
                             if (item != null) {
@@ -268,7 +268,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
             }
             .pointerInput(room, furniture, is3d, cameraYaw, cameraPitch, cameraZoom) {
             detectTapGestures { tap ->
-                val scale = roomSceneScale(size.width, size.height, room, cameraYaw, cameraPitch, cameraZoom, is3d)
+                val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
                 val cx = size.width * 0.5f
                 val cy = size.height * if (is3d) 0.58f else 0.5f
                 val candidates = mutableListOf<ru.mebel3d.app.core.SceneHit>()
@@ -326,7 +326,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                 }
             }
         }) {
-            val scale = roomSceneScale(size.width, size.height, room, cameraYaw, cameraPitch, cameraZoom, is3d)
+            val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
             val cx = size.width * 0.5f
             val cy = size.height * if (is3d) 0.58f else 0.5f
             val yaw = cameraYaw * PI.toFloat() / 180f
