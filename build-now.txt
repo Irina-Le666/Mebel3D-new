@@ -2,3 +2,4 @@ Verify enlarged interactive room plan and wall elevation preview.
 Exact rotated-room boundary validation and regression tests
 Integrated room drawing projection regression suite
 Run CI for cross-view drawing selection regression tests
+Retry CI after fixing test class structure
