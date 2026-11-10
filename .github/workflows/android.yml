@@ -1,7 +1,7 @@
 name: Android build and core regression
 
 concurrency:
-  group: mebel3d-${{ github.workflow }}-${{ github.ref }}
+  group: mebel3d-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 on:
