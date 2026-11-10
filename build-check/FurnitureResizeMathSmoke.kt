@@ -21,6 +21,21 @@ fun main() {
 
     check(runCatching { FurnitureResizeMath.fromScreenDelta(1f, 1f, 0f, false, 0f, 0) }.isFailure)
 
+    val subMillimetre = FurnitureResizeMath.fromScreenDeltaFloat(0.25f, 0f, 1f, false, 0f, 0)
+    check(kotlin.math.abs(subMillimetre.first - 0.25f) < 0.0001f && subMillimetre.second == 0f) {
+        "Resize math must preserve fractional millimetres: $subMillimetre"
+    }
+    var remainderX = 0f
+    var accumulated = 0
+    repeat(4) {
+        val delta = ru.mebel3d.app.core.DragDeltaAccumulator.consume(subMillimetre.first, 0f, remainderX, 0f)
+        accumulated += delta.dxMm
+        remainderX = delta.remainderX
+    }
+    check(accumulated == 1 && kotlin.math.abs(remainderX) < 0.0001f) {
+        "Four quarter-millimetre resize events must produce exactly 1 mm: $accumulated / $remainderX"
+    }
+
     val resized = FurnitureResizeMath.resizedDimensions(800, 600, 125, -75)
     check(resized == (925 to 525)) { "Размеры после перетаскивания не рассчитаны: $resized" }
     val minimum = FurnitureResizeMath.resizedDimensions(120, 140, -500, -500)
