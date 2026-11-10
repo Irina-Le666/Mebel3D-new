@@ -48,11 +48,19 @@ object RoomDrawingProjection {
 
     fun plan(room: RoomModel, furniture: List<FurnitureItem>): RoomPlanProjection {
         val projectedFurniture = furniture.filter { it.roomId == room.id }.map { item ->
-            val angle = Math.toRadians(item.rotationDeg.toDouble())
-            val c = cos(angle); val s = sin(angle)
-            val hw = item.size.width / 2.0; val hd = item.size.depth / 2.0
-            val polygon = listOf(-hw to -hd, hw to -hd, hw to hd, -hw to hd).map { (x, y) ->
-                DrawingPoint2(item.position.x + x * c - y * s, item.position.y + x * s + y * c)
+            val polygon = if (item.footprintShape == FurnitureFootprintShape.CIRCLE) {
+                val radius = item.size.width / 2.0
+                (0 until 48).map { index ->
+                    val angle = 2.0 * Math.PI * index / 48.0
+                    DrawingPoint2(item.position.x + radius * cos(angle), item.position.y + radius * sin(angle))
+                }
+            } else {
+                val angle = Math.toRadians(item.rotationDeg.toDouble())
+                val c = cos(angle); val s = sin(angle)
+                val hw = item.size.width / 2.0; val hd = item.size.depth / 2.0
+                listOf(-hw to -hd, hw to -hd, hw to hd, -hw to hd).map { (x, y) ->
+                    DrawingPoint2(item.position.x + x * c - y * s, item.position.y + x * s + y * c)
+                }
             }
             PlanFurnitureProjection(item.id, item.name, polygon, item.position.z, item.position.z + item.size.height)
         }
