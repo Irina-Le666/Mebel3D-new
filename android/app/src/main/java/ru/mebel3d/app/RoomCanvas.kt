@@ -66,7 +66,6 @@ private fun roomSceneScale(
 }
 
 @androidx.compose.runtime.Composable
-@androidx.compose.runtime.Composable
 fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: String?, selectedEngineeringId: String?, selectedOpeningId: String?, is3d: Boolean, cameraYaw: Float = 45f, cameraPitch: Float = 32f, cameraZoom: Float = 1f, wallDisplay: String = "Срез", showCeiling: Boolean = false, wallColorArgb: Long = 0xFFF0ECE5L, floorColorArgb: Long = 0xFFEADCC8L, lightingPreset: String = "Дневной",
     wallMaterialId: String? = null, northWallMaterialId: String? = null, eastWallMaterialId: String? = null, southWallMaterialId: String? = null, westWallMaterialId: String? = null, floorMaterialId: String? = null, ceilingColorArgb: Long = 0xFFF8F7F3L, ceilingMaterialId: String? = null, lightIntensityPercent: Int = 72, lightTemperatureKelvin: Int = 4200, shadowStrengthPercent: Int = 35, onSelect: (String) -> Unit, onMoveSelected: (Int, Int) -> Unit, assemblies: List<FurnitureAssembly> = emptyList(), selectedPartKey: String? = null, onSelectPart: (String, String) -> Unit = { _, _ -> }, onMoveSelectedPart: (String, String, Int, Int) -> Unit = { _, _, _, _ -> }, onResizeSelectedPart: (String, String, Int, Int) -> Unit = { _, _, _, _ -> }, onCameraChange: (Float, Float, Float) -> Unit = { _, _, _ -> }, onDragStart: () -> Unit = {}, onDragEnd: () -> Unit = {}, onDragCancel: () -> Unit = {}, measurementGuides: List<SceneGapGuide> = emptyList(), onResizeSelectedFurniture: (Int, Int) -> Unit = { _, _ -> }, onRotateSelectedFurniture: (Int) -> Unit = {}, onChangeSelectedFurnitureHeight: (Int) -> Unit = {}, onRotateSelectedPart: (String, String, Int) -> Unit = { _, _, _ -> }, onChangeSelectedPartHeight: (String, String, Int) -> Unit = { _, _, _ -> }) {
     Box(Modifier.fillMaxSize().background(Color(0xFFF8FAFD), RoundedCornerShape(12.dp))) {
@@ -102,8 +101,8 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                         val scale = roomSceneScale(size.width, size.height, room, cameraYaw, cameraPitch, cameraZoom, is3d)
                         val cx = size.width * 0.5f; val cy = size.height * if (is3d) 0.58f else 0.5f
                         val yaw = cameraYaw * PI.toFloat() / 180f
-                        val centerDx = selectedFurniture.position.x - room.widthMm / 2f
-                        val centerDy = selectedFurniture.position.y - room.depthMm / 2f
+                        val centerDx = selectedFurniture.position.x - room.widthMm.toFloat() / 2f
+                        val centerDy = selectedFurniture.position.y - room.depthMm.toFloat() / 2f
                         val center = if (is3d) Offset(cx + (centerDx*cos(yaw)-centerDy*sin(yaw))*scale*0.58f, cy + (centerDx*sin(yaw)+centerDy*cos(yaw))*scale*0.58f*kotlin.math.sin(cameraPitch * PI.toFloat() / 180f) - (selectedFurniture.position.z + selectedFurniture.size.height/2f)*scale*0.58f*kotlin.math.cos(cameraPitch * PI.toFloat() / 180f))
                             else Offset(cx-room.widthMm*scale*0.5f+(selectedFurniture.position.x+selectedFurniture.size.width/2f)*scale, cy-room.depthMm*scale*0.5f+(selectedFurniture.position.y+selectedFurniture.size.depth/2f)*scale)
                         furnitureGestureCenter = center
