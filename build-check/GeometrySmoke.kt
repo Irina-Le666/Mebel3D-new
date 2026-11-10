@@ -26,5 +26,7 @@ fun main() {
     val circleNearWall = round.copy(position = Vec3Mm(400, 1750, 0))
     check(GeometryEngine.validateFurniture(room, listOf(circleNearWall)).any { it.code == GeometryIssueCode.OUT_OF_ROOM })
     check(round.copy(footprintShape = FurnitureFootprintShape.RECTANGLE).footprintShape == FurnitureFootprintShape.RECTANGLE)
-    println("12 geometry smoke checks passed")
+    check(GeometryEngine.rotatedFootprint(round.copy(rotationDeg = 37)) == (1000 to 1000))
+    check(GeometryEngine.rotatedFootprint(round.copy(rotationDeg = 90)) == (1000 to 1000))
+    println("14 geometry smoke checks passed")
 }
