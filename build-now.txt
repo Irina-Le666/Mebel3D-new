@@ -1,1 +1,1 @@
-Trigger full core regression and Android debug APK build after source import.
+Trigger UI layout and room scene fit verification after responsive editor fixes.
