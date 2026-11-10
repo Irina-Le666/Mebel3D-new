@@ -21,7 +21,7 @@ class ProjectStorage(private val context: Context) {
     private fun encodeProject(project: ProjectModel): String {
         ProjectValidator.requireValid(project)
         val root = JSONObject().apply {
-            put("schemaVersion", 14)
+            put("schemaVersion", 15)
             put("id", project.id)
             put("name", project.name)
             put("activeRoomId", project.activeRoomId)
@@ -64,7 +64,7 @@ class ProjectStorage(private val context: Context) {
                 put("id", item.id); put("name", item.name)
                 put("widthMm", item.size.width); put("depthMm", item.size.depth); put("heightMm", item.size.height)
                 put("xMm", item.position.x); put("yMm", item.position.y); put("zMm", item.position.z)
-                put("rotationDeg", item.rotationDeg); put("materialId", item.materialId); put("colorArgb", item.colorArgb); put("roomId", item.roomId)
+                put("rotationDeg", item.rotationDeg); put("materialId", item.materialId); put("colorArgb", item.colorArgb); put("roomId", item.roomId); put("footprintShape", item.footprintShape.name)
             }) } })
             put("assemblies", JSONArray().apply { project.assemblies.forEach { assembly -> put(JSONObject().apply {
                 put("id", assembly.id); put("name", assembly.name)
@@ -198,7 +198,7 @@ class ProjectStorage(private val context: Context) {
         }
         val root = JSONObject(packageData.json)
         val schema = root.optInt("schemaVersion", 1)
-        require(schema in 1..14) { "Неподдерживаемая версия формата проекта: $schema" }
+        require(schema in 1..15) { "Неподдерживаемая версия формата проекта: $schema" }
         val requestedId = root.optString("id").takeIf { it.isNotBlank() }
             ?: error("В файле отсутствует идентификатор проекта")
         val existingIds = preferences.all.keys.asSequence()
@@ -436,7 +436,7 @@ class ProjectStorage(private val context: Context) {
                 },
                 furniture = (0 until furniture.length()).map { i -> furniture.getJSONObject(i).let { f ->
                     FurnitureItem(f.getString("id"), f.getString("name"), Size3Mm(f.getInt("widthMm"), f.getInt("depthMm"), f.getInt("heightMm")),
-                        Vec3Mm(f.getInt("xMm"), f.getInt("yMm"), f.optInt("zMm", 0)), f.optInt("rotationDeg", 0), f.optString("materialId", "wood-oak"), f.optLong("colorArgb", 0xFFD8C2A5), f.optString("roomId", "room-main"))
+                        Vec3Mm(f.getInt("xMm"), f.getInt("yMm"), f.optInt("zMm", 0)), f.optInt("rotationDeg", 0), f.optString("materialId", "wood-oak"), f.optLong("colorArgb", 0xFFD8C2A5), f.optString("roomId", "room-main"), FurnitureFootprintShape.valueOf(f.optString("footprintShape", "RECTANGLE")))
                 } },
                 activeRoomId = root.optString("activeRoomId", (0 until rooms.length()).firstOrNull()?.let { rooms.getJSONObject(it).optString("id", "room-main") } ?: "room-main"),
                 assemblies = (0 until assemblies.length()).map { i -> assemblies.getJSONObject(i).let { a ->
