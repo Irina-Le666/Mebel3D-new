@@ -98,7 +98,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                     dragPointer = start
                     val selectedFurniture = furniture.firstOrNull { it.id == selectedId }
                     if (selectedFurniture != null && selectedPartKey == null) {
-                        val scale = roomSceneScale(size.width, size.height, room, cameraYaw, cameraPitch, cameraZoom, is3d)
+                        val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
                         val cx = size.width * 0.5f; val cy = size.height * if (is3d) 0.58f else 0.5f
                         val yaw = cameraYaw * PI.toFloat() / 180f
                         val centerDx = selectedFurniture.position.x - room.widthMm.toFloat() / 2f
