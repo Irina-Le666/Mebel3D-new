@@ -94,7 +94,7 @@ object ProjectEditor {
     fun resizeFurniture(project: ProjectModel, itemId: String, widthMm: Int, depthMm: Int, heightMm: Int): ProjectModel {
         val item = project.furniture.firstOrNull { it.id == itemId } ?: error("Объект мебели не найден")
         val room = project.rooms.firstOrNull { it.id == item.roomId } ?: error("Помещение для мебели не найдено")
-        val candidate = GeometryEngine.resize(item, widthMm, depthMm, heightMm)
+        val candidate = GeometryEngine.resize(item, widthMm, if (item.footprintShape == FurnitureFootprintShape.CIRCLE) widthMm else depthMm, heightMm)
         val scoped = project.furniture.filter { it.roomId == item.roomId }.map { if (it.id == itemId) candidate else it }
         val issues = GeometryEngine.validateFurniture(room, scoped)
         require(issues.none { it.objectId == itemId || it.code == GeometryIssueCode.COLLISION }) {
