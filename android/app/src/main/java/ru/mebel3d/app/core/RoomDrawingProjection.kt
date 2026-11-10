@@ -139,6 +139,13 @@ object RoomDrawingProjection {
         if (side == WallSide.NORTH || side == WallSide.SOUTH) marker.position.x else marker.position.y
 
     private fun rotatedFootprint(item: FurnitureItem): List<DrawingPoint2> {
+        if (item.footprintShape == FurnitureFootprintShape.CIRCLE) {
+            val radius = item.size.width / 2.0
+            return (0 until 48).map { index ->
+                val angle = 2.0 * Math.PI * index / 48.0
+                DrawingPoint2(item.position.x + radius * cos(angle), item.position.y + radius * sin(angle))
+            }
+        }
         val angle = Math.toRadians(item.rotationDeg.toDouble())
         val c = cos(angle); val s = sin(angle)
         val hw = item.size.width / 2.0; val hd = item.size.depth / 2.0
