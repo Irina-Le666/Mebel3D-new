@@ -160,10 +160,7 @@ class GeometryEngineTest {
         assertEquals(1, GeometryEngine.upsertFurniture(listOf(original), moved).size)
     }
 
-}
-
-
-    @Test fun planAndElevationSelectTheSameOpeningByItsStableId() {
+@Test fun planAndElevationSelectTheSameOpeningByItsStableId() {
         val room = RoomModel(openings = listOf(
             WallOpening("door-east", WallSide.EAST, 400, 900, 0, 2100, OpeningKind.DOOR)
         ))
@@ -193,3 +190,4 @@ class GeometryEngineTest {
             east, 1300.0, 650.0, 20.0
         ))
     }
+}
