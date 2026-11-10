@@ -36,14 +36,30 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.PI
 
-private fun sceneCenterY(heightPx: Float, room: RoomModel, scale: Float, pitchDeg: Float, is3d: Boolean): Float {
-    if (!is3d) return heightPx * 0.5f
-    // The projected room is not vertically symmetric around the floor centre:
-    // the ceiling rises by H*cos(pitch). Shift the camera target down by half
-    // that projected height so the complete floor-to-wall envelope is centred.
+private fun roomProjectionBounds(room: RoomModel, yawDeg: Float, pitchDeg: Float): Pair<Pair<Float, Float>, Pair<Float, Float>> {
+    val yaw = yawDeg * PI.toFloat() / 180f
     val pitch = pitchDeg.coerceIn(5f, 85f) * PI.toFloat() / 180f
-    val projectedWallHeight = room.heightMm * scale * 0.58f * kotlin.math.cos(pitch)
-    return heightPx * 0.5f + projectedWallHeight * 0.5f
+    val projected = buildList {
+        for (x in listOf(0f, room.widthMm.toFloat())) {
+            for (y in listOf(0f, room.depthMm.toFloat())) {
+                for (z in listOf(0f, room.heightMm.toFloat())) {
+                    val dx = x - room.widthMm / 2f
+                    val dy = y - room.depthMm / 2f
+                    val horizontal = (dx * cos(yaw) - dy * sin(yaw)) * 0.58f
+                    val vertical = ((dx * sin(yaw) + dy * cos(yaw)) * sin(pitch) - z * cos(pitch)) * 0.58f
+                    add(horizontal to vertical)
+                }
+            }
+        }
+    }
+    return (projected.minOf { it.first } to projected.maxOf { it.first }) to
+        (projected.minOf { it.second } to projected.maxOf { it.second })
+}
+
+private fun sceneCenterY(heightPx: Float, room: RoomModel, scale: Float, yawDeg: Float, pitchDeg: Float, is3d: Boolean): Float {
+    if (!is3d) return heightPx * 0.5f
+    val bounds = roomProjectionBounds(room, yawDeg, pitchDeg).second
+    return heightPx * 0.5f - (bounds.first + bounds.second) * 0.5f * scale
 }
 
 private fun roomSceneScale(
@@ -55,25 +71,19 @@ private fun roomSceneScale(
     zoom: Float,
     is3d: Boolean
 ): Float {
-    val w = room.widthMm.toFloat()
-    val d = room.depthMm.toFloat()
+    val w = room.widthMm.toFloat().coerceAtLeast(1f)
+    val d = room.depthMm.toFloat().coerceAtLeast(1f)
     if (!is3d) {
-        // A plan is an orthographic top view: fit width and depth independently,
-        // then use one uniform scale so millimetres remain proportional on screen.
-        val fitWidth = canvasWidth * 0.90f / w.coerceAtLeast(1f)
-        val fitDepth = canvasHeight * 0.90f / d.coerceAtLeast(1f)
+        val fitWidth = canvasWidth * 0.90f / w
+        val fitDepth = canvasHeight * 0.90f / d
         return minOf(fitWidth, fitDepth).coerceAtLeast(0.001f) * zoom.coerceIn(0.35f, 3.5f)
     }
-    val yaw = yawDeg * PI.toFloat() / 180f
-    val pitch = pitchDeg * PI.toFloat() / 180f
-    val projectedWidth = 0.58f * (w * kotlin.math.abs(cos(yaw)) + d * kotlin.math.abs(sin(yaw)))
-    val projectedHeight = 0.58f * (
-        (w * kotlin.math.abs(sin(yaw)) + d * kotlin.math.abs(cos(yaw))) * kotlin.math.sin(pitch) +
-            room.heightMm.toFloat() * kotlin.math.cos(pitch)
-        )
-    val fitWidth = canvasWidth * 0.88f / projectedWidth.coerceAtLeast(1f)
-    val fitHeight = canvasHeight * 0.84f / projectedHeight.coerceAtLeast(1f)
-    return minOf(fitWidth, fitHeight).coerceAtLeast(0.001f) * zoom
+    val bounds = roomProjectionBounds(room, yawDeg, pitchDeg)
+    val projectedWidth = (bounds.first.second - bounds.first.first).coerceAtLeast(1f)
+    val projectedHeight = (bounds.second.second - bounds.second.first).coerceAtLeast(1f)
+    val fitWidth = canvasWidth * 0.84f / projectedWidth
+    val fitHeight = canvasHeight * 0.82f / projectedHeight
+    return (minOf(fitWidth, fitHeight).coerceAtLeast(0.001f) * zoom).coerceIn(0.001f, 10f)
 }
 
 @androidx.compose.runtime.Composable
@@ -110,7 +120,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                     val selectedFurniture = furniture.firstOrNull { it.id == selectedId }
                     if (selectedFurniture != null && selectedPartKey == null) {
                         val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
-                        val cx = size.width * 0.5f; val cy = sceneCenterY(size.height.toFloat(), room, scale, cameraPitch, is3d)
+                        val cx = size.width * 0.5f; val cy = sceneCenterY(size.height.toFloat(), room, scale, cameraYaw, cameraPitch, is3d)
                         val yaw = cameraYaw * PI.toFloat() / 180f
                         val centerDx = selectedFurniture.position.x - room.widthMm.toFloat() / 2f
                         val centerDy = selectedFurniture.position.y - room.depthMm.toFloat() / 2f
@@ -144,7 +154,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                         val assembly = assemblies.firstOrNull { it.id == ids[0] }
                         if (part != null && assembly != null) {
                             val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
-                            val cx = size.width * 0.5f; val cy = sceneCenterY(size.height.toFloat(), room, scale, cameraPitch, is3d)
+                            val cx = size.width * 0.5f; val cy = sceneCenterY(size.height.toFloat(), room, scale, cameraYaw, cameraPitch, is3d)
                             val partCx = assembly.position.x + part.localPosition.x + part.size.width / 2f
                             val partCy = assembly.position.y + part.localPosition.y + part.size.depth / 2f
                             val partAngle = part.rotationDeg * PI.toFloat() / 180f
@@ -281,7 +291,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
             detectTapGestures { tap ->
                 val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
                 val cx = size.width * 0.5f
-                val cy = sceneCenterY(size.height.toFloat(), room, scale, cameraPitch, is3d)
+                val cy = sceneCenterY(size.height.toFloat(), room, scale, cameraYaw, cameraPitch, is3d)
                 val candidates = mutableListOf<ru.mebel3d.app.core.SceneHit>()
                 val yaw = cameraYaw * PI.toFloat() / 180f
                 fun projectHit(x: Float, y: Float, z: Float): Offset {
@@ -356,7 +366,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
         }) {
             val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
             val cx = size.width * 0.5f
-            val cy = sceneCenterY(size.height.toFloat(), room, scale, cameraPitch, is3d)
+            val cy = sceneCenterY(size.height.toFloat(), room, scale, cameraYaw, cameraPitch, is3d)
             val yaw = cameraYaw * PI.toFloat() / 180f
             fun p(x: Float, y: Float, z: Float = 0f): Offset = if (is3d) {
                 val dx = x - room.widthMm / 2f; val dy = y - room.depthMm / 2f
