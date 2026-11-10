@@ -108,6 +108,8 @@ data class RoomModel(
     fun wallLength(side: WallSide): Int = if (side == WallSide.NORTH || side == WallSide.SOUTH) widthMm else depthMm
 }
 
+enum class FurnitureFootprintShape { RECTANGLE, CIRCLE }
+
 data class FurnitureItem(
     val id: String,
     val name: String,
@@ -117,7 +119,9 @@ data class FurnitureItem(
     val materialId: String = "wood-oak",
     val colorArgb: Long = 0xFFD8C2A5,
     /** Stable room ownership; defaults to the first room for legacy projects. */
-    val roomId: String = "room-main"
+    val roomId: String = "room-main",
+    /** Legacy projects omit this field and remain rectangular. */
+    val footprintShape: FurnitureFootprintShape = FurnitureFootprintShape.RECTANGLE
 )
 
 data class FurniturePart(
