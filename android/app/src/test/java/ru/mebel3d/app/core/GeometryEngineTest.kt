@@ -80,6 +80,32 @@ class GeometryEngineTest {
         assertEquals(900.0, north.furniture.single().bounds.topMm, 0.0)
     }
 
+    @Test fun duplicateFurnitureCreatesIndependentCollisionFreeCopy() {
+        val room = RoomModel(widthMm = 2400, depthMm = 1800)
+        val source = FurnitureItem("shelf", "Полка", Size3Mm(600, 300, 18), Vec3Mm(800, 700, 900), 12, materialId = "wood-oak", roomId = room.id)
+        val project = ProjectModel("p", "Проект", listOf(room), listOf(source), emptyList(), room.id)
+        val copied = ProjectEditor.duplicateFurniture(project, "shelf", "shelf-copy")
+        val copy = copied.furniture.single { it.id == "shelf-copy" }
+        assertEquals(source.size, copy.size)
+        assertEquals(source.rotationDeg, copy.rotationDeg)
+        assertEquals(source.position.z, copy.position.z)
+        assertEquals(source.materialId, copy.materialId)
+        assertTrue(copy.position != source.position)
+        assertTrue(GeometryEngine.validateFurniture(room, copied.furniture).isEmpty())
+        assertEquals(source, copied.furniture.first { it.id == "shelf" })
+    }
+
+    @Test fun duplicateFurnitureRejectsDuplicateIdentityAndUnknownSource() {
+        val room = RoomModel()
+        val source = FurnitureItem("one", "Панель", Size3Mm(300, 18, 900), Vec3Mm(1000, 1000), roomId = room.id)
+        val project = ProjectModel("p", "Проект", listOf(room), listOf(source), emptyList(), room.id)
+        var duplicateIdRejected = false
+        try { ProjectEditor.duplicateFurniture(project, "one", "one") } catch (_: IllegalArgumentException) { duplicateIdRejected = true }
+        assertTrue(duplicateIdRejected)
+        var missingSourceRejected = false
+        try { ProjectEditor.duplicateFurniture(project, "missing", "copy") } catch (_: IllegalStateException) { missingSourceRejected = true }
+        assertTrue(missingSourceRejected)
+    }
     @Test fun cabinetHasSelectableParts() {
         val parts = GeometryEngine.createCabinetParts(800, 500, 2100, 18)
         assertEquals(6, parts.size)
