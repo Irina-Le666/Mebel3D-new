@@ -47,7 +47,11 @@ private fun roomSceneScale(
     val w = room.widthMm.toFloat()
     val d = room.depthMm.toFloat()
     if (!is3d) {
-        return max(0.025f, minOf(canvasWidth / (w + d) * 0.72f, canvasHeight / (w + d) * 0.48f)) * zoom
+        // A plan is an orthographic top view: fit width and depth independently,
+        // then use one uniform scale so millimetres remain proportional on screen.
+        val fitWidth = canvasWidth * 0.90f / w.coerceAtLeast(1f)
+        val fitDepth = canvasHeight * 0.90f / d.coerceAtLeast(1f)
+        return minOf(fitWidth, fitDepth).coerceAtLeast(0.001f) * zoom.coerceIn(0.35f, 3.5f)
     }
     val yaw = yawDeg * PI.toFloat() / 180f
     val pitch = pitchDeg * PI.toFloat() / 180f
