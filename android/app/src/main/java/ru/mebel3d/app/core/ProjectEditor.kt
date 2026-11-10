@@ -121,7 +121,7 @@ object ProjectEditor {
     /** Dimension labels for a selected item, including exact clearances to each room wall. */
     fun furnitureDimensions(project: ProjectModel, itemId: String): FurnitureDimensions {
         val item = project.furniture.firstOrNull { it.id == itemId } ?: error("Объект мебели не найден")
-        val (footW, footD) = GeometryEngine.rotatedFootprint(item.size, item.rotationDeg)
+        val (footW, footD) = GeometryEngine.rotatedFootprint(item)
         val room = project.rooms.firstOrNull { it.id == item.roomId } ?: error("Помещение не найдено")
         return FurnitureDimensions(
             footW, footD, item.size.height,
@@ -225,7 +225,7 @@ object ProjectEditor {
         require(toleranceMm >= 0 && gridMm > 0) { "Неверные параметры привязки" }
         val item = project.furniture.firstOrNull { it.id == itemId } ?: error("Объект мебели не найден")
         val room = project.rooms.firstOrNull { it.id == item.roomId } ?: error("Помещение не найдено")
-        val (w, d) = GeometryEngine.rotatedFootprint(item.size, item.rotationDeg)
+        val (w, d) = GeometryEngine.rotatedFootprint(item)
         val halfW = w / 2
         val halfD = d / 2
         val candidates = mutableListOf<Triple<Int, Int, String>>()
