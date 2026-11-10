@@ -21,3 +21,4 @@ Exact projected room bounds and rear-wall visibility: fe87193980be9dd43baa9481e3
 Compact landscape workspace width pass: 49edd611316e54fdddee6279dfc2d6d04ff9ac9b
 Polygon silhouette hit testing verification 2026-11-10T15:13:00Z
 Canvas dimension overlay verification 2026-11-10 15:30Z
+Precision regression verification 2026-11-10 22:04 local
