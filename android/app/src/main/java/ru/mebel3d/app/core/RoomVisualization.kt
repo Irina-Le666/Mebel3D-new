@@ -228,7 +228,7 @@ object RoomVisualizationEngine {
         val near = delta < 90f
         when (mode) {
             WallDisplayMode.ALL_TRANSPARENT -> WallVisual(side, if (near) 0.72f else 0.20f, true, !near)
-            WallDisplayMode.CUTAWAY -> WallVisual(side, if (near) 0.88f else 0.12f, true, !near)
+            WallDisplayMode.CUTAWAY -> WallVisual(side, if (near) 0.94f else 0.34f, true, !near)
             WallDisplayMode.SOLID_NEAR -> WallVisual(side, if (near) 1f else 0f, near, false)
             WallDisplayMode.HIDE_ROOF -> WallVisual(side, if (near) 0.9f else 0.28f, true, !near)
         }
