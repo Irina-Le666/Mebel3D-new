@@ -1052,7 +1052,7 @@ private fun FurnitureHome() {
                         selectedAssemblyId = assemblyId; selectedAssemblyPartId = partId
                         selectedId = null; selectedEngineeringId = null; selectedOpeningId = null
                         val part = session.project.assemblies.firstOrNull { it.id == assemblyId }?.parts?.firstOrNull { it.id == partId }
-                        if (part != null) { selected = part.name; width = part.size.width.toString(); depth = part.size.depth.toString(); height = part.size.height.toString(); posX = part.localPosition.x.toString(); posY = part.localPosition.y.toString(); posZ = part.localPosition.z.toString(); angle = part.rotationDeg.toString(); activeSection = "Конструктор мебели" }
+                        if (part != null) { selected = part.name; width = part.size.width.toString(); depth = part.size.depth.toString(); height = part.size.height.toString(); posX = part.localPosition.x.toString(); posY = part.localPosition.y.toString(); posZ = part.localPosition.z.toString(); angle = part.rotationDeg.toString(); activeSection = "Конструктор" }
                     }, onMoveSelectedPart = { assemblyId, partId, dx, dy ->
                         val current = session.project.assemblies.firstOrNull { it.id == assemblyId }?.parts?.firstOrNull { it.id == partId }
                         if (current != null && (dx != 0 || dy != 0)) {
