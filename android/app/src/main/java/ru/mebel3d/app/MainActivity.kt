@@ -703,8 +703,9 @@ private fun FurnitureHome() {
                                 .background(if (selected == tool.name) BlueTint else Color(0xFFFAFBFE), RoundedCornerShape(9.dp))
                                 .clickable {
                                     val id = "part-${java.util.UUID.randomUUID()}"
-                                    val x = ((room.widthMm - tool.size.width) / 2).coerceAtLeast(0)
-                                    val y = ((room.depthMm - tool.size.depth) / 2).coerceAtLeast(0)
+                                    // FurnitureItem.position is the footprint centre, not its top-left corner.
+                                    val x = room.widthMm / 2
+                                    val y = room.depthMm / 2
                                     val z = tool.zMm.coerceIn(0, (room.heightMm - tool.size.height).coerceAtLeast(0))
                                     val part = FurnitureItem(id, tool.name, tool.size, Vec3Mm(x, y, z), materialId = tool.materialId, roomId = room.id)
                                     publish(session.project.copy(furniture = session.project.furniture + part))
