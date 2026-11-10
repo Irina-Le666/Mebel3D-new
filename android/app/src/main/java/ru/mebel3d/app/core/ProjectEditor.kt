@@ -72,6 +72,24 @@ object ProjectEditor {
         return project.copy(furniture = project.furniture.map { if (it.id == itemId) candidate else it })
     }
 
+    /** Creates an independent copy, preserving dimensions, rotation, elevation and material. */
+    fun duplicateFurniture(project: ProjectModel, itemId: String, newId: String, offsetMm: Int = 300): ProjectModel {
+        require(newId.isNotBlank() && project.furniture.none { it.id == newId }) { "Новый идентификатор пуст или уже используется" }
+        require(offsetMm > 0) { "Смещение копии должно быть положительным" }
+        val source = project.furniture.firstOrNull { it.id == itemId } ?: error("Объект мебели не найден")
+        val room = project.rooms.firstOrNull { it.id == source.roomId } ?: error("Помещение для мебели не найдено")
+        val roomItems = project.furniture.filter { it.roomId == source.roomId }
+        val step = maxOf(50, offsetMm)
+        val directions = listOf(1 to 0, 0 to 1, -1 to 0, 0 to -1, 1 to 1, -1 to 1, -1 to -1, 1 to -1)
+        for (ring in 1..40) for ((dx, dy) in directions) {
+            val candidate = source.copy(id = newId, name = if (source.name.endsWith(" (копия)")) source.name else "${source.name} (копия)",
+                position = source.position.copy(x = source.position.x + dx * step * ring, y = source.position.y + dy * step * ring))
+            val issues = GeometryEngine.validateFurniture(room, roomItems + candidate)
+            if (issues.none { it.objectId == newId || it.code == GeometryIssueCode.COLLISION })
+                return project.copy(furniture = project.furniture + candidate)
+        }
+        error("Рядом нет свободного места для копии детали")
+    }
     /** Resizes one furniture item atomically; invalid bounds and collisions reject the whole edit. */
     fun resizeFurniture(project: ProjectModel, itemId: String, widthMm: Int, depthMm: Int, heightMm: Int): ProjectModel {
         val item = project.furniture.firstOrNull { it.id == itemId } ?: error("Объект мебели не найден")
