@@ -7,6 +7,8 @@ fun main() {
     val moved = ProjectEditor.moveFurniture(base, "f", 1270, 1380)
     check(moved.furniture.single().position.x == 1250)
     check(moved.furniture.single().position.y == 1400)
+    val precisionMoved = ProjectEditor.moveFurniture(moved, "f", 1251, 1401, gridMm = 1)
+    check(precisionMoved.furniture.single().position == Vec3Mm(1251, 1401, 0))
     check(base.furniture.single().position == Vec3Mm(1000, 1000, 0))
     val rotated = ProjectEditor.rotateFurniture(moved, "f", 90)
     check(rotated.furniture.single().rotationDeg == 90)
