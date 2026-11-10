@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "mebel3d-new-project-2026-11-10-integration-audited.zip"
+      - "import-now.txt"
   workflow_dispatch:
 
 permissions:
