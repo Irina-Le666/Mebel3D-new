@@ -70,7 +70,7 @@ object RoomFurnitureArrangementPlanner {
     }
 
     private fun candidatePositions(room: RoomModel, item: FurnitureItem, grid: Int): List<Pair<Int, Int>> {
-        val (footW, footD) = GeometryEngine.rotatedFootprint(item.size, item.rotationDeg)
+        val (footW, footD) = GeometryEngine.rotatedFootprint(item)
         val minX = (footW / 2).coerceAtLeast(0)
         val maxX = room.widthMm - (footW + 1) / 2
         val minY = (footD / 2).coerceAtLeast(0)
