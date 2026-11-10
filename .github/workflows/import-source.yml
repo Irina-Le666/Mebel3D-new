@@ -33,7 +33,7 @@ jobs:
             --exclude='mebel3d-new-project-2026-11-10-integration-audited.zip' \
             --exclude='PROJECT_SCOPE_RU.md' \
             --exclude='.github/workflows/import-source.yml' \
-            /tmp/mebel3d-source/mebel-next-real/ ./
+            /tmp/mebel3d-source/ ./
           test -s android/app/src/main/java/ru/mebel3d/app/MainActivity.kt
           test -s .github/workflows/android.yml
           git status --short
