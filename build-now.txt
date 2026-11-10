@@ -1,1 +1,1 @@
-Trigger Android compile after correcting room scene fit helper.
+Verify compact phone-landscape panels and fitted room canvas.
