@@ -295,8 +295,17 @@ object GeometryEngine {
             // footprint is useful for labels, but must not decide whether a placement fits:
             // rounding each full extent first can hide a fractional-mm boundary overflow.
             val angle = Math.toRadians(item.rotationDeg.toDouble())
-            val halfWidth = (abs(cos(angle)) * item.size.width + abs(sin(angle)) * item.size.depth) / 2.0
-            val halfDepth = (abs(sin(angle)) * item.size.width + abs(cos(angle)) * item.size.depth) / 2.0
+            val halfWidth: Double
+            val halfDepth: Double
+            if (item.footprintShape == FurnitureFootprintShape.CIRCLE) {
+                // A circular footprint uses width as its diameter; depth is kept
+                // as a stored dimension for compatibility and height editing.
+                halfWidth = item.size.width / 2.0
+                halfDepth = item.size.width / 2.0
+            } else {
+                halfWidth = (abs(cos(angle)) * item.size.width + abs(sin(angle)) * item.size.depth) / 2.0
+                halfDepth = (abs(sin(angle)) * item.size.width + abs(cos(angle)) * item.size.depth) / 2.0
+            }
             val left = item.position.x.toDouble() - halfWidth
             val right = item.position.x.toDouble() + halfWidth
             val near = item.position.y.toDouble() - halfDepth
@@ -321,6 +330,8 @@ object GeometryEngine {
 
     /** Exact 2D separating-axis test for rotated rectangular furniture footprints. */
     private fun footprintsIntersect(a: FurnitureItem, b: FurnitureItem): Boolean {
+        fun circle(item: FurnitureItem) = item.footprintShape == FurnitureFootprintShape.CIRCLE
+        fun radius(item: FurnitureItem) = item.size.width / 2.0
         fun corners(item: FurnitureItem): List<Pair<Double, Double>> {
             val angle = Math.toRadians(item.rotationDeg.toDouble())
             val c = cos(angle); val s = sin(angle)
@@ -328,6 +339,26 @@ object GeometryEngine {
             return listOf(-hw to -hd, hw to -hd, hw to hd, -hw to hd).map { (x, y) ->
                 (item.position.x + x * c - y * s) to (item.position.y + x * s + y * c)
             }
+        }
+        if (circle(a) && circle(b)) {
+            val dx = (a.position.x - b.position.x).toDouble()
+            val dy = (a.position.y - b.position.y).toDouble()
+            val sum = radius(a) + radius(b)
+            return dx * dx + dy * dy < sum * sum
+        }
+        if (circle(a) || circle(b)) {
+            val round = if (circle(a)) a else b
+            val rect = if (circle(a)) b else a
+            val angle = Math.toRadians(rect.rotationDeg.toDouble())
+            val dx = round.position.x - rect.position.x
+            val dy = round.position.y - rect.position.y
+            val localX = dx * cos(angle) + dy * sin(angle)
+            val localY = -dx * sin(angle) + dy * cos(angle)
+            val closestX = localX.coerceIn(-rect.size.width / 2.0, rect.size.width / 2.0)
+            val closestY = localY.coerceIn(-rect.size.depth / 2.0, rect.size.depth / 2.0)
+            val ex = localX - closestX; val ey = localY - closestY
+            val r = radius(round)
+            return ex * ex + ey * ey < r * r
         }
         val ac = corners(a); val bc = corners(b)
         val axes = listOf(ac, bc).flatMap { polygon ->
