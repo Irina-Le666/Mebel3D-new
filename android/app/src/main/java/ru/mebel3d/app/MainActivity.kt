@@ -1392,9 +1392,16 @@ private fun FurnitureHome() {
                     }.onFailure { status = "Поворот отклонён: ${it.message}" } }
                 }, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(6.dp)) { Text("Повернуть на 90°", fontSize = 10.sp) }
                 OutlinedButton(onClick = {
-                    val old = selectedItem
-                    if (old != null) { val copy = old.copy(id = "item-${nextObjectId++}", name = "${old.name} (копия)", position = old.position.copy(x = (old.position.x + 300).coerceAtMost(room.widthMm - 1))); publish(session.project.copy(furniture = session.project.furniture + copy)); selectedId = copy.id; status = "Объект дублирован" }
-                }, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(6.dp)) { Text("Дублировать", fontSize = 10.sp) }
+                OutlinedButton(onClick = {
+                    selectedItem?.let { item -> runCatching {
+                        val copyId = "item-" + java.util.UUID.randomUUID().toString()
+                        publish(ProjectEditor.duplicateFurniture(session.project, item.id, copyId))
+                        selectedId = copyId
+                        selectedAssemblyId = null
+                        selectedAssemblyPartId = null
+                        status = "Создана независимая копия детали"
+                    }.onFailure { status = it.message ?: "Не удалось скопировать деталь" } }
+                }, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(6.dp)) { Text("Дублировать деталь", fontSize = 10.sp) }
                 OutlinedButton(onClick = { publish(session.project.copy(furniture = session.project.furniture.filterNot { it.id == selectedId })); selectedId = null; status = "Объект удалён" }, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(6.dp)) { Text("Удалить", fontSize = 10.sp) }
                 Text("${GeometryEngine.validateFurniture(room, visibleFurniture).firstOrNull()?.message ?: "Размещение без замечаний"}", color = if (GeometryEngine.validateFurniture(room, visibleFurniture).isEmpty()) Color(0xFF27834A) else Color(0xFFB45309), fontSize = 9.sp)
             }
