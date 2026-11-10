@@ -3,7 +3,7 @@ name: Import new project source archive
 on:
   push:
     paths:
-      - "mebel3d-source.zip"
+      - "mebel3d-new-project-2026-11-10-integration-audited.zip"
   workflow_dispatch:
 
 permissions:
@@ -23,14 +23,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -s mebel3d-source.zip
+          test -s mebel3d-new-project-2026-11-10-integration-audited.zip
           mkdir -p /tmp/mebel3d-source
-          unzip -t mebel3d-source.zip
-          unzip -q mebel3d-source.zip -d /tmp/mebel3d-source
+          unzip -t mebel3d-new-project-2026-11-10-integration-audited.zip
+          unzip -q mebel3d-new-project-2026-11-10-integration-audited.zip -d /tmp/mebel3d-source
           test -d /tmp/mebel3d-source/mebel-next-real
           rsync -a --delete \
             --exclude='.git/' \
-            --exclude='mebel3d-source.zip' \
+            --exclude='mebel3d-new-project-2026-11-10-integration-audited.zip' \
             /tmp/mebel3d-source/mebel-next-real/ ./
           test -s android/app/src/main/java/ru/mebel3d/app/MainActivity.kt
           test -s .github/workflows/android.yml
