@@ -469,7 +469,7 @@ private fun FurnitureHome() {
                 NumberField("Длина этого отрезка на фото, px", photoMeasuredPixels) { photoMeasuredPixels = it }
                 NumberField("Пиксель X начала стены (необязательно)", photoWallOriginPixels) { photoWallOriginPixels = it }
                 NumberField("Пиксель Y линии пола (необязательно)", photoFloorLinePixels) { photoFloorLinePixels = it }
-                selectedPhoto?.let { photo -> Text("Размер исходного фото: ${photo.imageWidthPx ?: "?"} × ${photo.imageHeightPx ?: "?"} px. Пустые координаты используют стандартное начало стены (слева для северной/восточной, справа для южной/западной) и нижний край как линию пола.", fontSize = 9.sp, color = Muted) }
+                room.photos.firstOrNull { it.id == selectedPhotoId }?.let { photo -> Text("Размер исходного фото: ${photo.imageWidthPx ?: "?"} × ${photo.imageHeightPx ?: "?"} px. Пустые координаты используют стандартное начало стены (слева для северной/восточной, справа для южной/западной) и нижний край как линию пола.", fontSize = 9.sp, color = Muted) }
             } },
             confirmButton = { TextButton(onClick = {
                 runCatching {
