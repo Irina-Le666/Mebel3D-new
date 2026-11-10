@@ -1,1 +1,1 @@
-Run verification after correcting 2D plan scale and RoomCanvas compilation issues.
+Verify readable compact navigation and true-scale 2D room plan.
