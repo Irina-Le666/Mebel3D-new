@@ -53,7 +53,7 @@ checks = {
     "legacy photo projects retain null-anchor behavior": 'photo.wallOriginXPx?.toDouble() ?: if (reverse) calibration else 0.0' in pm and 'photo.floorLineYPx?.toDouble() ?: room.heightMm.toDouble() / scale' in pm,
     "photo decode plan caps long edge at 4096px": 'maxDimension: Int = 4096' in pp and 'while ((maxOf(width, height).toLong() + sample - 1) / sample > maxDimension)' in pp,
     "stored project loads validate the payload ID against its key": 'decodeProject(raw)?.takeIf { it.id == projectId }' in st,
-    "stored project loads reject unsupported schema versions": 'require(schema in 1..14)' in st,
+    "stored project loads reject unsupported schema versions": 'require(schema in 1..15)' in st,
     "lighting parameters are persisted with legacy-safe defaults": all(x in st for x in ["lightIntensityPercent", "lightTemperatureKelvin", "shadowStrengthPercent"]) and 'optInt("lightIntensityPercent", 72)' in st and 'optInt("lightTemperatureKelvin", 4200)' in st and 'optInt("shadowStrengthPercent", 35)' in st,
     "lighting controls are range-validated": all(x in (root / "android/app/src/main/java/ru/mebel3d/app/core/ProjectValidator.kt").read_text() for x in ["lightIntensityPercent !in 0..100", "lightTemperatureKelvin !in 2700..6500", "shadowStrengthPercent !in 0..100"]),
     "lighting controls affect walls floor ceiling and furniture": all(x in cv for x in ["illuminate(Color(floorColorArgb.toInt()))", "illuminate(Color(wallFill.toInt()))", "illuminate(Color(ceilingColorArgb.toInt()))", "lightIntensityPercent", "lightTemperatureKelvin", "shadowStrengthPercent"]),
