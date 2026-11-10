@@ -1,1 +1,1 @@
-Rerun full core and Android verification after updating Float-aware source assertion.
+Verify room scale Float dimensions and updated regression assertion.
