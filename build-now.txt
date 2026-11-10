@@ -12,3 +12,5 @@ free-part-placement-2026-11-10-1027
 validated-duplicate-parts-2026-11-10-1032
 
 fix-duplicate-button-syntax-2026-11-10-1054
+
+wall-alignment-controls-2026-11-10-1108
