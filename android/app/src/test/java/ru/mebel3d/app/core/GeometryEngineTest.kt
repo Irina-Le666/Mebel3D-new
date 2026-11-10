@@ -34,6 +34,52 @@ class GeometryEngineTest {
         assertTrue(GeometryEngine.validateFurniture(RoomModel(), listOf(a, b)).any { it.code == GeometryIssueCode.COLLISION })
     }
 
+    @Test fun planProjectionUsesRotatedFurnitureFootprintInRoomCoordinates() {
+        val room = RoomModel(widthMm = 5000, depthMm = 3500)
+        val item = FurnitureItem("table", "Стол", Size3Mm(1200, 600, 750), Vec3Mm(2000, 1500), 90)
+        val plan = RoomDrawingProjection.plan(room, listOf(item))
+        val projected = plan.furniture.single()
+        assertEquals("table", projected.id)
+        assertEquals(600.0, projected.polygon.maxOf { it.xMm } - projected.polygon.minOf { it.xMm }, 0.001)
+        assertEquals(1200.0, projected.polygon.maxOf { it.yMm } - projected.polygon.minOf { it.yMm }, 0.001)
+        assertEquals("table", RoomDrawingSelection.selectPlanFurniture(plan, 2000.0, 1500.0))
+    }
+
+    @Test fun planAndElevationShareOpeningIdentityAndMillimetreBounds() {
+        val room = RoomModel(openings = listOf(
+            WallOpening("window-n", WallSide.NORTH, 700, 1300, 900, 1200, OpeningKind.WINDOW)
+        ))
+        val drawings = RoomDrawingProjection.build(room, emptyList())
+        val planOpening = drawings.plan.openings.single()
+        val elevationOpening = drawings.elevations.getValue(WallSide.NORTH).openings.single()
+        assertEquals(planOpening.id, elevationOpening.id)
+        assertEquals(700.0, elevationOpening.bounds.leftMm, 0.0)
+        assertEquals(2000.0, elevationOpening.bounds.rightMm, 0.0)
+        assertEquals(900.0, elevationOpening.bounds.bottomMm, 0.0)
+        assertEquals(2100.0, elevationOpening.bounds.topMm, 0.0)
+    }
+
+    @Test fun wallMountedEngineeringPointAppearsInPlanAndMatchingElevationOnly() {
+        val marker = EngineeringElement("socket", "Розетка", EngineeringKind.OUTLET, Vec3Mm(1250, 0, 350), WallSide.NORTH)
+        val drawings = RoomDrawingProjection.build(RoomModel(engineering = listOf(marker)), emptyList())
+        assertEquals("socket", drawings.plan.engineering.single().id)
+        assertEquals("socket", drawings.elevations.getValue(WallSide.NORTH).engineering.single().id)
+        assertTrue(drawings.elevations.getValue(WallSide.SOUTH).engineering.isEmpty())
+        assertTrue(drawings.elevations.getValue(WallSide.EAST).engineering.isEmpty())
+        assertTrue(drawings.elevations.getValue(WallSide.WEST).engineering.isEmpty())
+    }
+
+    @Test fun wallElevationProjectsFurnitureTouchingThatWallWithExactHeight() {
+        val room = RoomModel()
+        val item = FurnitureItem("base", "Тумба", Size3Mm(800, 500, 900), Vec3Mm(1200, 250))
+        val north = RoomDrawingProjection.elevation(room, listOf(item), WallSide.NORTH)
+        val south = RoomDrawingProjection.elevation(room, listOf(item), WallSide.SOUTH)
+        assertEquals(1, north.furniture.size)
+        assertEquals(0, south.furniture.size)
+        assertEquals(0.0, north.furniture.single().bounds.bottomMm, 0.0)
+        assertEquals(900.0, north.furniture.single().bounds.topMm, 0.0)
+    }
+
     @Test fun cabinetHasSelectableParts() {
         val parts = GeometryEngine.createCabinetParts(800, 500, 2100, 18)
         assertEquals(6, parts.size)
