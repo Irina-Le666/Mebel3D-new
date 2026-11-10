@@ -17,7 +17,12 @@ fi
   echo '  @JvmStatic fun main(args: Array<String>) {'
   echo '    val tests = listOf('
   for source in "${TESTS[@]}"; do
-    class="$(basename "$source" .kt)Kt"
+    base="$(basename "$source" .kt)"
+    if grep -q "^object $base[[:space:]]*{" "$source"; then
+      class="$base"
+    else
+      class="${base}Kt"
+    fi
     if grep -q '^package ru\.mebel3d\.app\.core' "$source"; then
       class="ru.mebel3d.app.core.$class"
     fi
