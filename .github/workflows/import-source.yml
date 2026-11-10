@@ -1,0 +1,51 @@
+name: Import new project source archive
+
+on:
+  push:
+    paths:
+      - "mebel3d-source.zip"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Verify and unpack project archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s mebel3d-source.zip
+          mkdir -p /tmp/mebel3d-source
+          unzip -t mebel3d-source.zip
+          unzip -q mebel3d-source.zip -d /tmp/mebel3d-source
+          test -d /tmp/mebel3d-source/mebel-next-real
+          rsync -a --delete \
+            --exclude='.git/' \
+            --exclude='mebel3d-source.zip' \
+            /tmp/mebel3d-source/mebel-next-real/ ./
+          test -s android/app/src/main/java/ru/mebel3d/app/MainActivity.kt
+          test -s .github/workflows/android.yml
+          git status --short
+
+      - name: Commit imported source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No source changes to import."
+            exit 0
+          fi
+          git commit -m "Import complete Mebel 3D new project source"
+          git push
