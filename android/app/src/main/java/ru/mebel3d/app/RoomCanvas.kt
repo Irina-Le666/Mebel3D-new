@@ -4,7 +4,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.ui.input.pointer.consume
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -119,10 +118,10 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                                 return Offset(cx+(dx*cos(yaw)-dy*sin(yaw))*scale*0.58f,
                                     cy+(dx*sin(yaw)+dy*cos(yaw))*scale*0.58f*kotlin.math.sin(cameraPitch * PI.toFloat() / 180f)-pz*scale*0.58f*kotlin.math.cos(cameraPitch * PI.toFloat() / 180f))
                             }
-                            val handle = projectPart(hx, hy, hz)
+                            val handle = projectPart(hx, hy, hz.toFloat())
                             val center = projectPart(partCx, partCy, partCz)
                             val rotationHandle = center + Offset(38.dp.toPx(), -28.dp.toPx())
-                            val heightHandle = projectPart(partCx, partCy, hz)
+                            val heightHandle = projectPart(partCx, partCy, hz.toFloat())
                             partGestureCenter = center
                             partRotationHandleActive = (start-rotationHandle).getDistance() < 25.dp.toPx()
                             partHeightHandleActive = is3d && !partRotationHandleActive && (start-heightHandle).getDistance() < 25.dp.toPx()
@@ -270,7 +269,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                     val px = assembly.position.x + part.localPosition.x + part.size.width / 2f
                     val py = assembly.position.y + part.localPosition.y + part.size.depth / 2f
                     val pz = assembly.position.z + part.localPosition.z
-                    addBoxHit("assembly-part:${assembly.id}:${part.id}", px, py, pz,
+                    addBoxHit("assembly-part:${assembly.id}:${part.id}", px, py, pz.toFloat(),
                         part.size.width.toFloat(), part.size.depth.toFloat(), part.size.height.toFloat(), part.rotationDeg)
                 } }
                 room.engineering.forEach { item ->
@@ -480,6 +479,8 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                 .furnitureBackToFront(room, painterCamera, furniture) else furniture
             painterFurniture.forEach { item ->
                 // Rotate every procedural face/detail around the furniture centre, not just its hitbox.
+                val x = item.position.x.toFloat(); val y = item.position.y.toFloat()
+                val hw = item.size.width / 2f; val hd = item.size.depth / 2f
                 fun ffp(px: Float, py: Float, pz: Float = 0f): Offset {
                     // The procedural faces are authored in room coordinates; convert them
                     // to the item's local [0..width] x [0..depth] frame before rotation.
@@ -488,8 +489,6 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                     )
                     return p(world.x, world.y, world.z)
                 }
-                val x = item.position.x.toFloat(); val y = item.position.y.toFloat()
-                val hw = item.size.width / 2f; val hd = item.size.depth / 2f
                 val z = item.position.z.toFloat(); val top = z + item.size.height
                 val selected = item.id == selectedId
                 val baseMaterial = Color(item.colorArgb.toInt())
