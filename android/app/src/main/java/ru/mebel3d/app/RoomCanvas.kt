@@ -669,6 +669,26 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                 val handle = p(handleX, handleY, (measuredItem.position.z + measuredItem.size.height).toFloat())
                 drawCircle(Color(0xFF075FCB), radius = 10.dp.toPx(), center = handle)
                 drawCircle(Color.White, radius = 4.dp.toPx(), center = handle)
+                // Keep the selected component's exact dimensions visible on the drawing itself,
+                // even when no wall/furniture alignment guides happen to be available.
+                val dimensionLabel = "${measuredItem.size.width} × ${measuredItem.size.depth} × ${measuredItem.size.height} мм"
+                val dimensionPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = android.graphics.Color.rgb(23, 32, 51)
+                    textSize = 11.dp.toPx()
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                }
+                val dimensionBg = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = android.graphics.Color.WHITE
+                    alpha = 238
+                }
+                val labelWidth = dimensionPaint.measureText(dimensionLabel)
+                val labelX = (handle.x - labelWidth / 2f).coerceIn(6.dp.toPx(), (size.width - labelWidth - 6.dp.toPx()).coerceAtLeast(6.dp.toPx()))
+                val labelY = (handle.y - 18.dp.toPx()).coerceIn(18.dp.toPx(), size.height - 6.dp.toPx())
+                drawIntoCanvas { canvas ->
+                    canvas.nativeCanvas.drawRoundRect(labelX - 5.dp.toPx(), labelY - 13.dp.toPx(),
+                        labelX + labelWidth + 5.dp.toPx(), labelY + 4.dp.toPx(), 5.dp.toPx(), 5.dp.toPx(), dimensionBg)
+                    canvas.nativeCanvas.drawText(dimensionLabel, labelX, labelY, dimensionPaint)
+                }
                 val center = p(measuredItem.position.x.toFloat(), measuredItem.position.y.toFloat(), (measuredItem.position.z + measuredItem.size.height/2f).toFloat())
                 val rotate = center + Offset(38.dp.toPx(), -28.dp.toPx())
                 val height = p(measuredItem.position.x.toFloat(), measuredItem.position.y.toFloat(), (measuredItem.position.z + measuredItem.size.height).toFloat())
