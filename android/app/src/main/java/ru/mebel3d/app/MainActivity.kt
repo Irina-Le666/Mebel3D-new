@@ -672,9 +672,9 @@ private fun FurnitureHome() {
         }
 
         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            Column(Modifier.width(if (compactLayout) 54.dp else 142.dp).fillMaxHeight().panel().padding(if (compactLayout) 3.dp else 6.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Column(Modifier.width(if (compactLayout) 88.dp else 142.dp).fillMaxHeight().panel().padding(if (compactLayout) 3.dp else 6.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 sections.forEach { section ->
-                    Text(if (compactLayout) section.take(3) else section, Modifier.fillMaxWidth().background(if (activeSection == section) BlueTint else Panel, RoundedCornerShape(9.dp)).clickable { activeSection = section; status = "Раздел: $section"; if (section == "Варианты дизайна") showVariantsDialog = true }.padding(horizontal = if (compactLayout) 2.dp else 8.dp, vertical = if (compactLayout) 8.dp else 10.dp), color = if (activeSection == section) Blue else Ink, fontSize = if (compactLayout) 8.sp else 11.sp, fontWeight = if (activeSection == section) FontWeight.Bold else FontWeight.Medium, maxLines = if (compactLayout) 3 else 2)
+                    Text(if (compactLayout) when (section) { "Помещения" -> "Комната"; "Планировка" -> "План"; "Стены и проёмы" -> "Стены"; "Двери и окна" -> "Проёмы"; "Конструктор" -> "Детали"; "Размеры и чертежи" -> "Чертежи"; "Фото помещения" -> "Фото"; "Варианты дизайна" -> "Варианты"; "Сохранение" -> "Проект"; else -> section } else section, Modifier.fillMaxWidth().background(if (activeSection == section) BlueTint else Panel, RoundedCornerShape(9.dp)).clickable { activeSection = section; status = "Раздел: $section"; if (section == "Варианты дизайна") showVariantsDialog = true }.padding(horizontal = if (compactLayout) 2.dp else 8.dp, vertical = if (compactLayout) 8.dp else 10.dp), color = if (activeSection == section) Blue else Ink, fontSize = if (compactLayout) 9.sp else 11.sp, fontWeight = if (activeSection == section) FontWeight.Bold else FontWeight.Medium, maxLines = if (compactLayout) 3 else 2)
                 }
             }
             Column(Modifier.width(if (compactLayout) 165.dp else 205.dp).fillMaxHeight().panel().padding(if (compactLayout) 5.dp else 8.dp)) {
@@ -1031,7 +1031,7 @@ private fun FurnitureHome() {
                     }
                 }
             }
-            Column(Modifier.width(if (compactLayout) 178.dp else 210.dp).fillMaxHeight().panel().padding(if (compactLayout) 6.dp else 10.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Column(Modifier.width(if (compactLayout) 188.dp else 210.dp).fillMaxHeight().panel().padding(if (compactLayout) 6.dp else 10.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 Text(selectedItem?.name ?: "Объект не выбран", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Ink)
                 if (activeSection == "Размеры и чертежи") {
                     val drawings = remember(room, visibleFurniture) { RoomDrawingProjection.build(room, visibleFurniture) }
