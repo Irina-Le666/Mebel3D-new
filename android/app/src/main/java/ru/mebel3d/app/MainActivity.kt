@@ -197,6 +197,7 @@ private fun FurnitureHome() {
     }
     val visibleFurniture = placed.filter { it.roomId == room.id }
     var selectedId by remember { mutableStateOf(restored?.furniture?.firstOrNull()?.id) }
+    var pendingFreePart by remember { mutableStateOf<FreePartTool?>(null) }
     var selectedAssemblyId by remember { mutableStateOf<String?>(null) }
     var selectedAssemblyPartId by remember { mutableStateOf<String?>(null) }
     var nextObjectId by remember { mutableIntStateOf(1) }
@@ -694,7 +695,8 @@ private fun FurnitureHome() {
             Column(Modifier.width(if (compactLayout) 165.dp else 205.dp).fillMaxHeight().panel().padding(if (compactLayout) 5.dp else 8.dp)) {
                 if (activeSection == "Конструктор") {
                     Text("Свободный конструктор", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Ink)
-                    Text("Добавляйте детали по одной. Выберите панель, полку или штангу — затем меняйте её прямо на чертеже пальцами.", fontSize = 9.sp, color = Muted)
+                    Text("Выберите деталь, коснитесь места установки на плане, затем меняйте размер и положение прямо пальцами.", fontSize = 9.sp, color = Muted)
+                    pendingFreePart?.let { tool -> Text("Выбрано: ${tool.name} · коснитесь комнаты для установки", color = Blue, fontSize = 9.sp, fontWeight = FontWeight.SemiBold) }
                     Divider(color = Border, modifier = Modifier.padding(vertical = 5.dp))
                     Text("ДЕТАЛИ ДЛЯ ПОСТРОЕНИЯ", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Muted)
                     LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -702,21 +704,13 @@ private fun FurnitureHome() {
                             Column(Modifier.fillMaxWidth().border(1.dp, if (selected == tool.name) Blue else Border, RoundedCornerShape(9.dp))
                                 .background(if (selected == tool.name) BlueTint else Color(0xFFFAFBFE), RoundedCornerShape(9.dp))
                                 .clickable {
-                                    val id = "part-${java.util.UUID.randomUUID()}"
-                                    // FurnitureItem.position is the footprint centre, not its top-left corner.
-                                    val x = room.widthMm / 2
-                                    val y = room.depthMm / 2
-                                    val z = tool.zMm.coerceIn(0, (room.heightMm - tool.size.height).coerceAtLeast(0))
-                                    val part = FurnitureItem(id, tool.name, tool.size, Vec3Mm(x, y, z), materialId = tool.materialId, roomId = room.id)
-                                    publish(session.project.copy(furniture = session.project.furniture + part))
+                                    pendingFreePart = tool
                                     selected = tool.name
-                                    selectedId = id
+                                    selectedId = null
                                     selectedAssemblyId = null
                                     selectedAssemblyPartId = null
-                                    width = tool.size.width.toString(); depth = tool.size.depth.toString(); height = tool.size.height.toString()
-                                    posX = x.toString(); posY = y.toString(); posZ = z.toString(); angle = "0"
-                                    mode = "3D"
-                                    status = "Добавлена деталь «${tool.name}». Выделите её на поле и растягивайте маркеры размера."
+                                    mode = "План"
+                                    status = "Деталь «${tool.name}» выбрана. Коснитесь нужного места в комнате для установки."
                                 }.padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Box(Modifier.fillMaxWidth().height(38.dp).background(Color(0xFFF0F2F5), RoundedCornerShape(6.dp)), contentAlignment = Alignment.Center) {
                                     Text(tool.glyph, fontSize = 24.sp, color = Ink)
@@ -977,7 +971,27 @@ private fun FurnitureHome() {
                 Spacer(Modifier.height(10.dp))
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     RoomCanvas(room, visibleFurniture, selectedId, selectedEngineeringId, selectedOpeningId, mode == "3D", cameraYaw = cameraYaw, cameraPitch = cameraPitch, cameraZoom = cameraZoom, wallDisplay = wallDisplay, showCeiling = showCeiling, wallColorArgb = room.wallColorArgb, floorColorArgb = room.floorColorArgb, lightingPreset = room.lightingPreset,
-                        wallMaterialId = room.wallMaterialId, northWallMaterialId = room.northWallMaterialId, eastWallMaterialId = room.eastWallMaterialId, southWallMaterialId = room.southWallMaterialId, westWallMaterialId = room.westWallMaterialId, floorMaterialId = room.floorMaterialId, ceilingColorArgb = room.ceilingColorArgb, ceilingMaterialId = room.ceilingMaterialId, lightIntensityPercent = room.lightIntensityPercent, lightTemperatureKelvin = room.lightTemperatureKelvin, shadowStrengthPercent = room.shadowStrengthPercent, measurementGuides = selectedId?.let { id -> runCatching { SceneAlignmentEngine.measure(session.project, id) }.getOrDefault(emptyList()) } ?: emptyList(), onSelect = { id ->
+                        wallMaterialId = room.wallMaterialId, northWallMaterialId = room.northWallMaterialId, eastWallMaterialId = room.eastWallMaterialId, southWallMaterialId = room.southWallMaterialId, westWallMaterialId = room.westWallMaterialId, floorMaterialId = room.floorMaterialId, ceilingColorArgb = room.ceilingColorArgb, ceilingMaterialId = room.ceilingMaterialId, lightIntensityPercent = room.lightIntensityPercent, lightTemperatureKelvin = room.lightTemperatureKelvin, shadowStrengthPercent = room.shadowStrengthPercent, measurementGuides = selectedId?.let { id -> runCatching { SceneAlignmentEngine.measure(session.project, id) }.getOrDefault(emptyList()) } ?: emptyList(), onPlaceFreePart = { xMm, yMm ->
+                        val tool = pendingFreePart
+                        if (tool != null) {
+                            val id = "part-${java.util.UUID.randomUUID()}"
+                            val halfW = tool.size.width / 2
+                            val halfD = tool.size.depth / 2
+                            val x = xMm.coerceIn(halfW, (room.widthMm - halfW).coerceAtLeast(halfW))
+                            val y = yMm.coerceIn(halfD, (room.depthMm - halfD).coerceAtLeast(halfD))
+                            val z = tool.zMm.coerceIn(0, (room.heightMm - tool.size.height).coerceAtLeast(0))
+                            val part = FurnitureItem(id, tool.name, tool.size, Vec3Mm(x, y, z), materialId = tool.materialId, roomId = room.id)
+                            publish(session.project.copy(furniture = session.project.furniture + part))
+                            selectedId = id
+                            selectedAssemblyId = null
+                            selectedAssemblyPartId = null
+                            width = tool.size.width.toString(); depth = tool.size.depth.toString(); height = tool.size.height.toString()
+                            posX = x.toString(); posY = y.toString(); posZ = z.toString(); angle = "0"
+                            pendingFreePart = null
+                            activeSection = "Конструктор"
+                            status = "Деталь «${tool.name}» установлена: ${x} × ${y} мм. Размер можно менять маркерами."
+                        }
+                    }, onSelect = { id ->
                         // A scene selection is exclusive: stale assembly-part selection must not
                         // keep intercepting drags after the user taps furniture/openings/engineering.
                         selectedAssemblyId = null
