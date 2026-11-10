@@ -168,9 +168,7 @@ object ProjectEditor {
         require(gapMm >= 0) { "Отступ не может быть отрицательным" }
         val item = project.furniture.firstOrNull { it.id == itemId } ?: error("Объект мебели не найден")
         val room = project.rooms.firstOrNull { it.id == item.roomId } ?: error("Помещение не найдено")
-        val rotated = ((item.rotationDeg % 180) != 0)
-        val width = if (rotated) item.size.depth else item.size.width
-        val depth = if (rotated) item.size.width else item.size.depth
+        val (width, depth) = GeometryEngine.rotatedFootprint(item)
         val x = when (side) {
             WallSide.WEST -> gapMm + width / 2
             WallSide.EAST -> room.widthMm - gapMm - width / 2
@@ -190,16 +188,16 @@ object ProjectEditor {
         val item = project.furniture.firstOrNull { it.id == itemId } ?: error("Объект мебели не найден")
         val target = project.furniture.firstOrNull { it.id == targetId } ?: error("Объект-ориентир не найден")
         require(item.roomId == target.roomId) { "Объекты должны находиться в одном помещении" }
-        val itemSwap = item.rotationDeg % 180 != 0
-        val targetSwap = target.rotationDeg % 180 != 0
+        val (itemWidth, itemDepth) = GeometryEngine.rotatedFootprint(item)
+        val (targetWidth, targetDepth) = GeometryEngine.rotatedFootprint(target)
         val itemHalf = when (axis.lowercase()) {
-            "x" -> (if (itemSwap) item.size.depth else item.size.width) / 2
-            "y" -> (if (itemSwap) item.size.width else item.size.depth) / 2
+            "x" -> itemWidth / 2
+            "y" -> itemDepth / 2
             else -> error("Ось должна быть X или Y")
         }
         val targetHalf = when (axis.lowercase()) {
-            "x" -> (if (targetSwap) target.size.depth else target.size.width) / 2
-            else -> (if (targetSwap) target.size.width else target.size.depth) / 2
+            "x" -> targetWidth / 2
+            else -> targetDepth / 2
         }
         val targetCenter = if (axis.lowercase() == "x") target.position.x else target.position.y
         val targetMin = targetCenter - targetHalf
@@ -238,7 +236,7 @@ object ProjectEditor {
 
         // Adjacent-edge and centre-line candidates relative to other objects in this room.
         project.furniture.filter { it.roomId == item.roomId && it.id != itemId }.forEach { other ->
-            val (ow, od) = GeometryEngine.rotatedFootprint(other.size, other.rotationDeg)
+            val (ow, od) = GeometryEngine.rotatedFootprint(other)
             val ohw = ow / 2; val ohd = od / 2
             val alignedY = other.position.y
             val alignedX = other.position.x
