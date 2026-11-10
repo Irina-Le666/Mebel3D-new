@@ -333,9 +333,23 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                         ?.let { candidates += it }
                 }
                 furniture.forEach { item ->
-                    // FurnitureItem.position is its footprint centre (the renderer and validator use this convention).
-                    addBoxHit(item.id, item.position.x.toFloat(), item.position.y.toFloat(),
-                        item.position.z.toFloat(), item.size.width.toFloat(), item.size.depth.toFloat(), item.size.height.toFloat(), item.rotationDeg)
+                    // Circular items are selectable by their projected cylindrical silhouette.
+                    if (item.footprintShape == ru.mebel3d.app.core.FurnitureFootprintShape.CIRCLE) {
+                        val radius = item.size.width / 2f
+                        val points = (0 until 32).flatMap { index ->
+                            val a = index * (2f * PI.toFloat() / 32f)
+                            val x = item.position.x + radius * cos(a)
+                            val y = item.position.y + radius * sin(a)
+                            listOf(projectHit(x, y, item.position.z.toFloat()),
+                                projectHit(x, y, (item.position.z + item.size.height).toFloat()))
+                        }
+                        SceneHitTesting.scorePolygon(item.id, tap.x, tap.y, points.map { it.x to it.y })
+                            ?.let { candidates += it }
+                    } else {
+                        // FurnitureItem.position is its footprint centre.
+                        addBoxHit(item.id, item.position.x.toFloat(), item.position.y.toFloat(),
+                            item.position.z.toFloat(), item.size.width.toFloat(), item.size.depth.toFloat(), item.size.height.toFloat(), item.rotationDeg)
+                    }
                 }
                 assemblies.forEach { assembly -> assembly.parts.forEach { part ->
                     val px = assembly.position.x + part.localPosition.x + part.size.width / 2f
@@ -593,7 +607,30 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                 )
                 val fill = if (selected) Color(0xFF9CC8FF) else litMaterial
                 val sideShade = (0.90f - shadowStrengthPercent.coerceIn(0, 100) / 100f * 0.24f).coerceIn(0.55f, 0.95f)
-                if (is3d) {
+                if (item.footprintShape == ru.mebel3d.app.core.FurnitureFootprintShape.CIRCLE) {
+                    val radius = item.size.width / 2f
+                    val bottom = (0 until 48).map { i ->
+                        val a = i * (2f * PI.toFloat() / 48f)
+                        ffp(x + radius * cos(a), y + radius * sin(a), z)
+                    }
+                    val upper = (0 until 48).map { i ->
+                        val a = i * (2f * PI.toFloat() / 48f)
+                        ffp(x + radius * cos(a), y + radius * sin(a), top)
+                    }
+                    if (is3d) {
+                        for (i in 0 until 48) {
+                            val j = (i + 1) % 48
+                            polygon(listOf(bottom[i], bottom[j], upper[j], upper[i]),
+                                if (selected) Color(0xFF7FB5F5) else litMaterial.copy(
+                                    red = (litMaterial.red * sideShade).coerceIn(0f,1f),
+                                    green = (litMaterial.green * sideShade).coerceIn(0f,1f),
+                                    blue = (litMaterial.blue * sideShade).coerceIn(0f,1f)),
+                                if (selected) Color(0xFF1677F8) else Color(0xFF8A6A4C))
+                        }
+                    }
+                    polygon(if (is3d) upper else bottom, fill,
+                        if (selected) Color(0xFF075FCB) else Color(0xFF8A6A4C))
+                } else if (is3d) {
                     val a=ffp(x-hw,y-hd,z); val b=ffp(x+hw,y-hd,z); val c=ffp(x+hw,y+hd,z); val e=ffp(x-hw,y+hd,z)
                     val at=ffp(x-hw,y-hd,top); val bt=ffp(x+hw,y-hd,top); val ct=ffp(x+hw,y+hd,top); val et=ffp(x-hw,y+hd,top)
                     polygon(listOf(a,b,bt,at), if(selected) Color(0xFF7FB5F5) else litMaterial.copy(red = (litMaterial.red * if (warmLight) 1.02f else 0.94f).coerceIn(0f,1f), green = (litMaterial.green * sideShade).coerceIn(0f,1f), blue = (litMaterial.blue * if (coolLight) 0.98f else sideShade).coerceIn(0f,1f)), if(selected) Color(0xFF1677F8) else Color(0xFF8A6A4C))
