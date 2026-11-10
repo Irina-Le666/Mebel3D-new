@@ -709,7 +709,7 @@ private fun FurnitureHome() {
                                     selectedId = null
                                     selectedAssemblyId = null
                                     selectedAssemblyPartId = null
-                                    mode = "План"
+                                    mode = "2D"
                                     status = "Деталь «${tool.name}» выбрана. Коснитесь нужного места в комнате для установки."
                                 }.padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Box(Modifier.fillMaxWidth().height(38.dp).background(Color(0xFFF0F2F5), RoundedCornerShape(6.dp)), contentAlignment = Alignment.Center) {
