@@ -107,6 +107,8 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                 var partDragRemainderY = 0f
                 var furnitureDragRemainderX = 0f
                 var furnitureDragRemainderY = 0f
+                var furnitureResizeRemainderX = 0f
+                var furnitureResizeRemainderY = 0f
                 var rotationGesture: ru.mebel3d.app.core.SceneGestureTransform.FurnitureGesture? = null
                 var heightGesture: ru.mebel3d.app.core.SceneGestureTransform.FurnitureGesture? = null
                 var furnitureGestureCenter = Offset.Zero
@@ -266,10 +268,15 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                         if (furnitureResizeHandleActive) {
                             val item = furniture.firstOrNull { it.id == selectedId }
                             if (item != null) {
-                                val (dw, dd) = ru.mebel3d.app.core.FurnitureResizeMath.fromScreenDelta(
+                                val (dw, dd) = ru.mebel3d.app.core.FurnitureResizeMath.fromScreenDeltaFloat(
                                     dragAmount.x, dragAmount.y, scale, is3d, cameraYaw, item.rotationDeg, cameraPitch
                                 )
-                                onResizeSelectedFurniture(dw, dd)
+                                val delta = ru.mebel3d.app.core.DragDeltaAccumulator.consume(
+                                    dw, dd, furnitureResizeRemainderX, furnitureResizeRemainderY
+                                )
+                                furnitureResizeRemainderX = delta.remainderX
+                                furnitureResizeRemainderY = delta.remainderY
+                                if (delta.dxMm != 0 || delta.dyMm != 0) onResizeSelectedFurniture(delta.dxMm, delta.dyMm)
                             }
                             return@detectDragGestures
                         }
