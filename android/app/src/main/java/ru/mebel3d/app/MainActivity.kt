@@ -739,6 +739,7 @@ private fun FurnitureHome() {
                     }, modifier = Modifier.fillMaxWidth()) { Text("Подобрать расстановку", fontSize = 10.sp) }
                     Divider(color = Border, modifier = Modifier.padding(vertical = 4.dp))
                 }
+                if (activeSection != "Конструктор") {
                 OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth().height(52.dp), singleLine = true, placeholder = { Text("Поиск мебели…", fontSize = 11.sp) })
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 6.dp)) {
                     (listOf("Все") + catalog.map { it.category }.distinct()).forEach { c ->
@@ -770,6 +771,7 @@ private fun FurnitureHome() {
                             Text("${entry.size.width} × ${entry.size.depth} × ${entry.size.height} мм", fontSize = 8.sp, color = Muted, maxLines = 1)
                         }
                     }
+                }
                 }
                 if (activeSection == "Инженерия") {
                     Divider(Modifier.padding(vertical = 5.dp))
