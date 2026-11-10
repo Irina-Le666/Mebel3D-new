@@ -996,7 +996,7 @@ private fun FurnitureHome() {
                         if (item != null && (dx != 0 || dy != 0)) {
                             val targetX = item.position.x + dx
                             val targetY = item.position.y + dy
-                            runCatching { publishGesture(ProjectEditor.moveFurniture(session.project, item.id, targetX, targetY, gridMm = 50)) }
+                            runCatching { publishGesture(ProjectEditor.moveFurniture(session.project, item.id, targetX, targetY, gridMm = 1)) }
                                 .onFailure { status = "Перемещение отклонено: ${it.message}" }
                         }
                     }, assemblies = session.project.assemblies, selectedPartKey = selectedAssemblyId?.let { a -> selectedAssemblyPartId?.let { p -> "$a:$p" } }, onSelectPart = { assemblyId, partId ->
