@@ -119,7 +119,7 @@ private fun FurnitureHome() {
     var photoOriginalHeight by remember { mutableIntStateOf(0) }
     var pendingCameraFile by remember { mutableStateOf<File?>(null) }
     val context = LocalContext.current
-    val compactLayout = LocalConfiguration.current.screenWidthDp < 900
+    val compactLayout = LocalConfiguration.current.screenWidthDp < 1100
     val storage = remember { ProjectStorage(context) }
     val designVariants = remember { mutableStateListOf<RoomDesignVariant>() }
     var showVariantsDialog by remember { mutableStateOf(false) }
