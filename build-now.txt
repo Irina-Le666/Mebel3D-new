@@ -16,3 +16,4 @@ fix-duplicate-button-syntax-2026-11-10-1054
 wall-alignment-controls-2026-11-10-1108
 
 Room framing regression verification: a8d9aa244a991cb8380d871acea6f99f13af3db7
+Pixel type fix: 9160529c3f32de7cc282f190ab99c78ddd51ba96
