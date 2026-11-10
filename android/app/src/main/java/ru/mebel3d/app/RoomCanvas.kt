@@ -35,7 +35,6 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.PI
 
-@androidx.compose.runtime.Composable
 private fun roomSceneScale(
     canvasWidth: Float,
     canvasHeight: Float,
@@ -55,13 +54,14 @@ private fun roomSceneScale(
     val projectedWidth = 0.58f * (w * kotlin.math.abs(cos(yaw)) + d * kotlin.math.abs(sin(yaw)))
     val projectedHeight = 0.58f * (
         (w * kotlin.math.abs(sin(yaw)) + d * kotlin.math.abs(cos(yaw))) * kotlin.math.sin(pitch) +
-            room.heightMm * kotlin.math.cos(pitch)
+            room.heightMm.toFloat() * kotlin.math.cos(pitch)
         )
     val fitWidth = canvasWidth * 0.88f / projectedWidth.coerceAtLeast(1f)
     val fitHeight = canvasHeight * 0.84f / projectedHeight.coerceAtLeast(1f)
     return minOf(fitWidth, fitHeight).coerceAtLeast(0.001f) * zoom
 }
 
+@androidx.compose.runtime.Composable
 fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: String?, selectedEngineeringId: String?, selectedOpeningId: String?, is3d: Boolean, cameraYaw: Float = 45f, cameraPitch: Float = 32f, cameraZoom: Float = 1f, wallDisplay: String = "Срез", showCeiling: Boolean = false, wallColorArgb: Long = 0xFFF0ECE5L, floorColorArgb: Long = 0xFFEADCC8L, lightingPreset: String = "Дневной",
     wallMaterialId: String? = null, northWallMaterialId: String? = null, eastWallMaterialId: String? = null, southWallMaterialId: String? = null, westWallMaterialId: String? = null, floorMaterialId: String? = null, ceilingColorArgb: Long = 0xFFF8F7F3L, ceilingMaterialId: String? = null, lightIntensityPercent: Int = 72, lightTemperatureKelvin: Int = 4200, shadowStrengthPercent: Int = 35, onSelect: (String) -> Unit, onMoveSelected: (Int, Int) -> Unit, assemblies: List<FurnitureAssembly> = emptyList(), selectedPartKey: String? = null, onSelectPart: (String, String) -> Unit = { _, _ -> }, onMoveSelectedPart: (String, String, Int, Int) -> Unit = { _, _, _, _ -> }, onResizeSelectedPart: (String, String, Int, Int) -> Unit = { _, _, _, _ -> }, onCameraChange: (Float, Float, Float) -> Unit = { _, _, _ -> }, onDragStart: () -> Unit = {}, onDragEnd: () -> Unit = {}, onDragCancel: () -> Unit = {}, measurementGuides: List<SceneGapGuide> = emptyList(), onResizeSelectedFurniture: (Int, Int) -> Unit = { _, _ -> }, onRotateSelectedFurniture: (Int) -> Unit = {}, onChangeSelectedFurnitureHeight: (Int) -> Unit = {}, onRotateSelectedPart: (String, String, Int) -> Unit = { _, _, _ -> }, onChangeSelectedPartHeight: (String, String, Int) -> Unit = { _, _, _ -> }) {
     Box(Modifier.fillMaxSize().background(Color(0xFFF8FAFD), RoundedCornerShape(12.dp))) {
