@@ -26,7 +26,7 @@ fun RoomDrawingPreview(
     onSelectOpening: (String) -> Unit = {},
     onSelectEngineering: (String) -> Unit = {}
 ) {
-    Canvas(Modifier.fillMaxWidth().height(142.dp).pointerInput(plan, elevation, onSelectFurniture, onSelectOpening, onSelectEngineering) {
+    Canvas(Modifier.fillMaxWidth().height(210.dp).pointerInput(plan, elevation, onSelectFurniture, onSelectOpening, onSelectEngineering) {
         detectTapGestures { tap ->
             val w = size.width
             val h = size.height
