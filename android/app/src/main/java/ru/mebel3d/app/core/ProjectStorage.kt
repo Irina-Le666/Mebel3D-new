@@ -398,7 +398,7 @@ class ProjectStorage(private val context: Context) {
     private fun decodeProject(raw: String): ProjectModel? = runCatching {
             val root = JSONObject(raw)
             val schema = root.optInt("schemaVersion", 1)
-            require(schema in 1..14) { "Неподдерживаемая версия формата проекта: $schema" }
+            require(schema in 1..15) { "Неподдерживаемая версия формата проекта: $schema" }
             val rooms = root.optJSONArray("rooms") ?: JSONArray()
             val furniture = root.optJSONArray("furniture") ?: JSONArray()
             val assemblies = root.optJSONArray("assemblies") ?: JSONArray()
