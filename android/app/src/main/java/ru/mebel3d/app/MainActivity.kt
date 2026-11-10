@@ -1021,7 +1021,7 @@ private fun FurnitureHome() {
                     }, onMoveSelectedPart = { assemblyId, partId, dx, dy ->
                         val current = session.project.assemblies.firstOrNull { it.id == assemblyId }?.parts?.firstOrNull { it.id == partId }
                         if (current != null && (dx != 0 || dy != 0)) {
-                            runCatching { publishGesture(ProjectEditor.moveAssemblyPart(session.project, assemblyId, partId, current.localPosition.x + dx, current.localPosition.y + dy, current.localPosition.z, 10)) }
+                            runCatching { publishGesture(ProjectEditor.moveAssemblyPart(session.project, assemblyId, partId, current.localPosition.x + dx, current.localPosition.y + dy, current.localPosition.z, 1)) }
                                 .onFailure { status = "Перемещение детали отклонено: ${it.message}" }
                         }
                     }, onResizeSelectedPart = { assemblyId, partId, dw, dh ->
