@@ -6,3 +6,4 @@ Retry CI after fixing test class structure
 Custom cabinet builder workflow d4ca6c3958c296d92c30b5e453a6a3cf68ea96ed
 Free-form drag-and-resize part palette b08543dbe7806e93560831d4d1baffda06c6d12b
 Centre placement fix for free-form parts e9ef9fc9ac088461e5ac629cd598f638d32aebc4
+Millimetre free placement cbf1412cc131243a580ecd899fe38d970aaa087d
