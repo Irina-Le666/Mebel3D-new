@@ -19,13 +19,20 @@ object RoomDrawingProjectionSmoke {
         )
         val furniture = listOf(
             FurnitureItem("cab", "Шкаф", Size3Mm(1000, 600, 2200), Vec3Mm(1000, 400, 0), rotationDeg = 90, roomId = "r"),
+            FurnitureItem("round", "Круглый стол", Size3Mm(1000, 1000, 750), Vec3Mm(3500, 2500, 0), roomId = "r", footprintShape = FurnitureFootprintShape.CIRCLE),
             FurnitureItem("other-room", "Диван", Size3Mm(2000, 900, 800), Vec3Mm(2500, 1700, 0), roomId = "other")
         )
         val drawings = RoomDrawingProjection.build(room, furniture)
         check(drawings.plan.widthMm == 5000 && drawings.plan.depthMm == 3500)
         check(drawings.plan.openings.size == 4)
         check(drawings.plan.engineering.size == 4)
-        check(drawings.plan.furniture.size == 1) { "plan must filter furniture by room ownership" }
+        check(drawings.plan.furniture.size == 2) { "plan must filter furniture by room ownership" }
+        val roundPlan = drawings.plan.furniture.single { it.id == "round" }
+        check(roundPlan.polygon.size == 48)
+        check(kotlin.math.abs(roundPlan.polygon.minOf { it.xMm } - 3000.0) < 0.001)
+        check(kotlin.math.abs(roundPlan.polygon.maxOf { it.xMm } - 4000.0) < 0.001)
+        check(kotlin.math.abs(roundPlan.polygon.minOf { it.yMm } - 2000.0) < 0.001)
+        check(kotlin.math.abs(roundPlan.polygon.maxOf { it.yMm } - 3000.0) < 0.001)
         val north = drawings.elevations.getValue(WallSide.NORTH)
         check(north.lengthMm == 5000 && north.heightMm == 2700)
         check(north.openings.single().bounds == DrawingRect(800.0, 0.0, 1700.0, 2100.0))
@@ -39,6 +46,6 @@ object RoomDrawingProjectionSmoke {
         check(north.furniture.any { it.id == "cab" }) { "rotated cabinet near north wall must appear in elevation" }
         check(drawings.elevations.values.all { it.horizontalDimensions.sumOf(DrawingDimension::lengthMm) == it.lengthMm })
         check(RoomDrawingProjection.build(room, emptyList()).plan.furniture.isEmpty())
-        println("RoomDrawingProjectionSmoke: 14 checks passed")
+        println("RoomDrawingProjectionSmoke: 19 checks passed")
     }
 }
