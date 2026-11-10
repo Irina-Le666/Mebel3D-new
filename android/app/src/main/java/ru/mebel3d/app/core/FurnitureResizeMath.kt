@@ -44,4 +44,34 @@ object FurnitureResizeMath {
         val localY = -sx * sin(angle) + sy * cos(angle)
         return localX.roundToInt() to localY.roundToInt()
     }
+
+    /** Fractional variant used during continuous touch gestures; callers accumulate the remainder. */
+    fun fromScreenDeltaFloat(
+        dragXpx: Float,
+        dragYpx: Float,
+        scalePxPerMm: Float,
+        is3d: Boolean,
+        cameraYawDeg: Float,
+        furnitureRotationDeg: Int,
+        cameraPitchDeg: Float = 32f
+    ): Pair<Float, Float> {
+        require(dragXpx.isFinite() && dragYpx.isFinite()) { "Некорректное перемещение" }
+        require(scalePxPerMm > 0f && scalePxPerMm.isFinite()) { "Некорректный масштаб сцены" }
+        val sx: Float
+        val sy: Float
+        if (is3d) {
+            require(cameraPitchDeg in 5f..85f && cameraPitchDeg.isFinite()) { "Некорректный угол камеры" }
+            val yaw = Math.toRadians(cameraYawDeg.toDouble())
+            val horizontal = dragXpx / (0.58f * scalePxPerMm)
+            val vertical = dragYpx / (0.58f * kotlin.math.sin(Math.toRadians(cameraPitchDeg.toDouble())).toFloat() * scalePxPerMm)
+            sx = (horizontal * cos(yaw) + vertical * sin(yaw)).toFloat()
+            sy = (-horizontal * sin(yaw) + vertical * cos(yaw)).toFloat()
+        } else {
+            sx = dragXpx / scalePxPerMm
+            sy = dragYpx / scalePxPerMm
+        }
+        val angle = Math.toRadians(furnitureRotationDeg.toDouble())
+        return (sx * cos(angle) + sy * sin(angle)).toFloat() to
+            (-sx * sin(angle) + sy * cos(angle)).toFloat()
+    }
 }
