@@ -27,7 +27,7 @@ jobs:
           mkdir -p /tmp/mebel3d-source
           unzip -t mebel3d-new-project-2026-11-10-integration-audited.zip
           unzip -q mebel3d-new-project-2026-11-10-integration-audited.zip -d /tmp/mebel3d-source
-          test -d /tmp/mebel3d-source/mebel-next-real
+          test -s /tmp/mebel3d-source/android/app/src/main/java/ru/mebel3d/app/MainActivity.kt
           rsync -a --delete \
             --exclude='.git/' \
             --exclude='mebel3d-new-project-2026-11-10-integration-audited.zip' \
