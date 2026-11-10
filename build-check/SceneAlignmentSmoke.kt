@@ -1,0 +1,27 @@
+import ru.mebel3d.app.core.*
+
+fun main() {
+    val room = RoomModel(id = "r", widthMm = 5000, depthMm = 4000, heightMm = 2700)
+    val a = FurnitureItem("a", "Шкаф", Size3Mm(600, 500, 2100), Vec3Mm(1000, 1000), roomId = "r")
+    val b = FurnitureItem("b", "Стол", Size3Mm(800, 600, 750), Vec3Mm(2000, 1000), roomId = "r")
+    val project = ProjectModel("p", "Тест", listOf(room), listOf(a, b), emptyList(), "r")
+    val guides = SceneAlignmentEngine.measure(project, "a")
+    check(guides.any { it.label == "До Стол" && it.distanceMm == 300 })
+    check(guides.any { it.label == "До левой стены" && it.distanceMm == 700 })
+    check(guides.any { it.label == "До правой стены" && it.distanceMm == 3700 })
+    val snap = SceneAlignmentEngine.suggestSnap(project, "a", 1290, 1200, 100)
+    check(snap != null && snap.axis == "X" && snap.targetId == "b" && snap.distanceMm == 10)
+    val snapped = SceneAlignmentEngine.applySnap(project, "a", snap!!)
+    check(snapped.furniture.first { it.id == "a" }.position.x == 1300)
+    check(project.furniture.first { it.id == "a" }.position.x == 1000)
+    check(SceneAlignmentEngine.suggestSnap(project, "a", 1200, 1600, 20) == null)
+    check(runCatching { SceneAlignmentEngine.suggestSnap(project, "a", 1000, 1000, -1) }.isFailure)
+    check(runCatching { SceneAlignmentEngine.measure(project, "missing") }.isFailure)
+    val extreme = project.copy(furniture = listOf(a.copy(position = Vec3Mm(Int.MAX_VALUE, 1000))))
+    check(runCatching { SceneAlignmentEngine.measure(extreme, "a") }.isFailure)
+    check(SceneAlignmentEngine.suggestSnap(extreme, "a", Int.MAX_VALUE, 1000, 80) == null)
+    val rotated = a.copy(rotationDeg = 90)
+    val rotatedProject = project.copy(furniture = listOf(rotated, b))
+    check(SceneAlignmentEngine.measure(rotatedProject, "a").any { it.label == "До левой стены" && it.distanceMm == 750 })
+    println("SceneAlignmentSmoke: 12 checks passed")
+}

@@ -1,0 +1,27 @@
+package ru.mebel3d.app.core
+
+fun main() {
+    val base = ProjectModel("p1", "Квартира")
+    val v1 = RoomDesignVariantManager.capture(base, "v1", "Базовый", nowEpochMs = 1)
+    check(v1.snapshot == base)
+    val furnished = base.copy(furniture = listOf(FurnitureItem("sofa", "Диван", Size3Mm(1800, 800, 850), Vec3Mm(2500, 1750, 0))))
+    val v2 = RoomDesignVariantManager.capture(furnished, "v2", "С диваном", "Вариант для гостиной", 2)
+    val diff = RoomDesignVariantManager.compare(v1, v2)
+    check(diff.changes.single().kind == VariantChangeKind.FURNITURE_ADDED)
+    check(diff.addedCount == 1 && diff.removedCount == 0 && !diff.isIdentical)
+    check(RoomDesignVariantManager.compare(v1, v1).isIdentical)
+    val renamed = RoomDesignVariantManager.apply(base.copy(id = "active", name = "Текущий"), v2)
+    check(renamed.id == "active" && renamed.name == "Текущий" && renamed.furniture.single().id == "sofa")
+    val cloned = RoomDesignVariantManager.clone(v2, "v3", "Копия", 3)
+    check(cloned.snapshot == v2.snapshot && cloned.id != v2.id && cloned.createdAtEpochMs == 3L)
+    val list = RoomDesignVariantManager.add(listOf(v1), v2)
+    check(list.size == 2 && RoomDesignVariantManager.remove(list, "v1") == listOf(v2))
+    check(runCatching { RoomDesignVariantManager.add(list, v2) }.isFailure)
+    check(runCatching { RoomDesignVariantManager.capture(base, "", "Нет ID") }.isFailure)
+    check(runCatching { RoomDesignVariantManager.apply(base, v1.copy(snapshot = base.copy(activeRoomId = "missing"))) }.isFailure)
+    val resized = RoomDesignVariantManager.capture(base.copy(rooms = listOf(base.rooms.first().copy(widthMm = 6000))), "v4", "Шире", nowEpochMs = 4)
+    check(RoomDesignVariantManager.compare(v1, resized).changes.any { it.kind == VariantChangeKind.ROOM_RESIZED })
+    val finish = RoomDesignVariantManager.capture(base.copy(rooms = listOf(base.rooms.first().copy(lightingPreset = "Вечер"))), "v5", "Другой свет", nowEpochMs = 5)
+    check(RoomDesignVariantManager.compare(v1, finish).changes.any { it.kind == VariantChangeKind.ROOM_FINISH_CHANGED })
+    println("RoomDesignVariantsSmoke: 14 checks passed")
+}

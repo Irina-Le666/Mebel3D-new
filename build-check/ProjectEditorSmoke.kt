@@ -1,0 +1,22 @@
+import ru.mebel3d.app.core.*
+fun main() {
+ val a = RoomModel(id="room-a", name="Кухня")
+ val b = RoomModel(id="room-b", name="Спальня")
+ var p = ProjectModel("p", "Дом", listOf(a), listOf(FurnitureItem("f1", "Шкаф", Size3Mm(1000,600,2200), Vec3Mm(1000,1000), roomId="room-a")))
+ p = ProjectEditor.addRoom(p,b)
+ check(p.activeRoomId == "room-b")
+ check(ProjectEditor.furnitureInActiveRoom(p).isEmpty())
+ p = ProjectEditor.activateRoom(p,"room-a")
+ check(ProjectEditor.furnitureInActiveRoom(p).single().id == "f1")
+ p = ProjectEditor.duplicateRoom(p,"room-a","room-c","Кухня 2")
+ check(p.furniture.any { it.id == "room-c-f1" && it.roomId == "room-c" })
+ p = ProjectEditor.removeRoom(p,"room-a")
+ check(p.furniture.none { it.roomId == "room-a" })
+ check(p.rooms.any { it.id == p.activeRoomId })
+ val history = ProjectHistory(p)
+ val changed = ProjectEditor.renameRoom(p,"room-c","Вторая кухня")
+ history.commit(changed)
+ check(history.undo().rooms.first { it.id == "room-c" }.name == "Кухня 2")
+ check(history.redo().rooms.first { it.id == "room-c" }.name == "Вторая кухня")
+ println("ProjectEditor smoke: 8 assertions passed")
+}

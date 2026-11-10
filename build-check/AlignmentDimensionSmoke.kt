@@ -1,0 +1,26 @@
+import ru.mebel3d.app.core.*
+
+fun main() {
+    val room = RoomModel(id = "r", widthMm = 5000, depthMm = 4000, heightMm = 2700)
+    val a = FurnitureItem("a", "Шкаф", Size3Mm(600, 500, 2100), Vec3Mm(1000, 1000), roomId = "r")
+    val b = FurnitureItem("b", "Стол", Size3Mm(800, 600, 750), Vec3Mm(2500, 2000), roomId = "r")
+    val project = ProjectModel("p", "Тест", listOf(room), listOf(a, b), emptyList(), "r")
+    val west = ProjectEditor.alignFurnitureToWall(project, "a", WallSide.WEST, 100)
+    check(west.furniture.first { it.id == "a" }.position.x == 400)
+    val east = ProjectEditor.alignFurnitureToWall(project, "a", WallSide.EAST, 200)
+    check(east.furniture.first { it.id == "a" }.position.x == 4500)
+    val north = ProjectEditor.alignFurnitureToWall(project, "a", WallSide.NORTH, 150)
+    check(north.furniture.first { it.id == "a" }.position.y == 400)
+    val centered = ProjectEditor.alignFurnitureToItem(project, "a", "b", "x", "center")
+    check(centered.furniture.first { it.id == "a" }.position.x == 2500)
+    val edge = ProjectEditor.alignFurnitureToItem(project, "a", "b", "x", "start")
+    check(edge.furniture.first { it.id == "a" }.position.x == 2400)
+    val clearances = ProjectEditor.furnitureClearances(project, "a")
+    check(clearances[WallSide.WEST] == 700)
+    check(clearances[WallSide.EAST] == 3700)
+    check(clearances[WallSide.NORTH] == 750)
+    check(clearances[WallSide.SOUTH] == 2750)
+    check(runCatching { ProjectEditor.alignFurnitureToWall(project, "a", WallSide.WEST, -1) }.isFailure)
+    check(runCatching { ProjectEditor.alignFurnitureToItem(project, "a", "b", "z", "center") }.isFailure)
+    println("AlignmentDimensionSmoke: 10 checks passed")
+}
