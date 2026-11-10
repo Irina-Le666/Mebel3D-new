@@ -10,3 +10,5 @@ Millimetre free placement cbf1412cc131243a580ecd899fe38d970aaa087d
 free-part-placement-2026-11-10-1027
 
 validated-duplicate-parts-2026-11-10-1032
+
+fix-duplicate-button-syntax-2026-11-10-1054
