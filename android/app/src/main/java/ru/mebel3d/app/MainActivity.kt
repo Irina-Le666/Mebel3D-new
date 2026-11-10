@@ -1391,6 +1391,19 @@ private fun FurnitureHome() {
                         status = "Объект повёрнут на 90°"
                     }.onFailure { status = "Поворот отклонён: ${it.message}" } }
                 }, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(6.dp)) { Text("Повернуть на 90°", fontSize = 10.sp) }
+                Text("Точное выравнивание по стене", fontSize = 10.sp, color = Muted)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    listOf(WallSide.WEST to "К левой", WallSide.EAST to "К правой", WallSide.NORTH to "К верхней", WallSide.SOUTH to "К нижней").forEach { (side, label) ->
+                        OutlinedButton(onClick = {
+                            selectedItem?.let { item -> runCatching {
+                                publish(ProjectEditor.alignFurnitureToWall(session.project, item.id, side))
+                                status = "Объект выровнен по стене: $label"
+                            }.onFailure { status = "Выравнивание невозможно: ${it.message}" } }
+                        }, modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 2.dp, vertical = 5.dp)) {
+                            Text(label, fontSize = 8.sp, maxLines = 1)
+                        }
+                    }
+                }
                 OutlinedButton(onClick = {
                     selectedItem?.let { item -> runCatching {
                         val copyId = "item-" + java.util.UUID.randomUUID().toString()
