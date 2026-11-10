@@ -1,1 +1,2 @@
 Verify enlarged interactive room plan and wall elevation preview.
+Exact rotated-room boundary validation and regression tests
