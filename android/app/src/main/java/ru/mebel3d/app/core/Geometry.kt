@@ -232,6 +232,11 @@ object GeometryEngine {
             (size.width * s + size.depth * c).roundToInt()
     }
 
+    /** Bounding footprint for an actual furniture item, independent of rotation for circles. */
+    fun rotatedFootprint(item: FurnitureItem): Pair<Int, Int> =
+        if (item.footprintShape == FurnitureFootprintShape.CIRCLE) item.size.width to item.size.width
+        else rotatedFootprint(item.size, item.rotationDeg)
+
     /**
      * Builds a room-local marker position on the requested wall.
      * The room origin is NORTH-WEST: NORTH is Y=0, SOUTH is Y=depth.
