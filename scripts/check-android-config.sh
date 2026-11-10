@@ -90,7 +90,7 @@ checks = {
     "scene alignment uses Long bounds and rejects overflow instead of wrapping": 'data class Bounds(val left: Long' in al and 'fun exactInt(value: Long' in al and 'x in Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong()' in al,
     "furniture scene transform rotates local geometry around the canonical footprint centre": 'localXmm - item.size.width / 2f' in (root / "android/app/src/main/java/ru/mebel3d/app/core/FurnitureSceneTransform.kt").read_text() and 'item.position.x + dx * cos(angle)' in (root / "android/app/src/main/java/ru/mebel3d/app/core/FurnitureSceneTransform.kt").read_text(),
     "canvas converts room-space furniture vertices to local coordinates before rotation": 'px - (x - hw)' in cv and 'py - (y - hd)' in cv,
-    "3D drag handles use the furniture footprint centre": 'selectedFurniture.position.x - room.widthMm / 2f' in cv and 'selectedFurniture.position.y - room.depthMm / 2f' in cv,
+    "3D drag handles use the furniture footprint centre": 'selectedFurniture.position.x - room.widthMm.toFloat() / 2f' in cv and 'selectedFurniture.position.y - room.depthMm.toFloat() / 2f' in cv,
     "selected furniture dimension handles use the same canonical centre": 'p(measuredItem.position.x.toFloat(), measuredItem.position.y.toFloat()' in cv,
     "room layout rejects a narrow aisle as an invalid plan": '"NARROW_AISLE"' in rl and '"INVALID_REQUEST", "NARROW_AISLE"' in rl,
     "room layout uses Long for module sums and opening intervals": 'sumOf { it.widthMm.toLong() }' in rl and 'val openingStart = opening.offsetMm.toLong()' in rl and 'openingStart + opening.widthMm.toLong()' in rl,
