@@ -1,1 +1,1 @@
-Trigger UI layout and room scene fit verification after responsive editor fixes.
+Trigger Android compile after correcting room scene fit helper.
