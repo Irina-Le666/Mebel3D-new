@@ -1,1 +1,1 @@
-Verify compact phone-landscape panels and fitted room canvas.
+Run verification after correcting 2D plan scale and RoomCanvas compilation issues.
