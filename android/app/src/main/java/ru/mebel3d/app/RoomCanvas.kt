@@ -31,6 +31,7 @@ import ru.mebel3d.app.core.OpeningKind
 import ru.mebel3d.app.core.RoomVisualizationEngine
 import ru.mebel3d.app.core.WallDisplayMode
 import kotlin.math.max
+import kotlin.math.roundToInt
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.PI
@@ -67,7 +68,7 @@ private fun roomSceneScale(
 
 @androidx.compose.runtime.Composable
 fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: String?, selectedEngineeringId: String?, selectedOpeningId: String?, is3d: Boolean, cameraYaw: Float = 45f, cameraPitch: Float = 32f, cameraZoom: Float = 1f, wallDisplay: String = "Срез", showCeiling: Boolean = false, wallColorArgb: Long = 0xFFF0ECE5L, floorColorArgb: Long = 0xFFEADCC8L, lightingPreset: String = "Дневной",
-    wallMaterialId: String? = null, northWallMaterialId: String? = null, eastWallMaterialId: String? = null, southWallMaterialId: String? = null, westWallMaterialId: String? = null, floorMaterialId: String? = null, ceilingColorArgb: Long = 0xFFF8F7F3L, ceilingMaterialId: String? = null, lightIntensityPercent: Int = 72, lightTemperatureKelvin: Int = 4200, shadowStrengthPercent: Int = 35, onSelect: (String) -> Unit, onMoveSelected: (Int, Int) -> Unit, assemblies: List<FurnitureAssembly> = emptyList(), selectedPartKey: String? = null, onSelectPart: (String, String) -> Unit = { _, _ -> }, onMoveSelectedPart: (String, String, Int, Int) -> Unit = { _, _, _, _ -> }, onResizeSelectedPart: (String, String, Int, Int) -> Unit = { _, _, _, _ -> }, onCameraChange: (Float, Float, Float) -> Unit = { _, _, _ -> }, onDragStart: () -> Unit = {}, onDragEnd: () -> Unit = {}, onDragCancel: () -> Unit = {}, measurementGuides: List<SceneGapGuide> = emptyList(), onResizeSelectedFurniture: (Int, Int) -> Unit = { _, _ -> }, onRotateSelectedFurniture: (Int) -> Unit = {}, onChangeSelectedFurnitureHeight: (Int) -> Unit = {}, onRotateSelectedPart: (String, String, Int) -> Unit = { _, _, _ -> }, onChangeSelectedPartHeight: (String, String, Int) -> Unit = { _, _, _ -> }) {
+    wallMaterialId: String? = null, northWallMaterialId: String? = null, eastWallMaterialId: String? = null, southWallMaterialId: String? = null, westWallMaterialId: String? = null, floorMaterialId: String? = null, ceilingColorArgb: Long = 0xFFF8F7F3L, ceilingMaterialId: String? = null, lightIntensityPercent: Int = 72, lightTemperatureKelvin: Int = 4200, shadowStrengthPercent: Int = 35, onSelect: (String) -> Unit, onMoveSelected: (Int, Int) -> Unit, assemblies: List<FurnitureAssembly> = emptyList(), selectedPartKey: String? = null, onSelectPart: (String, String) -> Unit = { _, _ -> }, onMoveSelectedPart: (String, String, Int, Int) -> Unit = { _, _, _, _ -> }, onResizeSelectedPart: (String, String, Int, Int) -> Unit = { _, _, _, _ -> }, onCameraChange: (Float, Float, Float) -> Unit = { _, _, _ -> }, onDragStart: () -> Unit = {}, onDragEnd: () -> Unit = {}, onDragCancel: () -> Unit = {}, measurementGuides: List<SceneGapGuide> = emptyList(), onResizeSelectedFurniture: (Int, Int) -> Unit = { _, _ -> }, onRotateSelectedFurniture: (Int) -> Unit = {}, onChangeSelectedFurnitureHeight: (Int) -> Unit = {}, onRotateSelectedPart: (String, String, Int) -> Unit = { _, _, _ -> }, onChangeSelectedPartHeight: (String, String, Int) -> Unit = { _, _, _ -> }, onPlaceFreePart: (Int, Int) -> Unit = { _, _ -> }) {
     Box(Modifier.fillMaxSize().background(Color(0xFFF8FAFD), RoundedCornerShape(12.dp))) {
         Canvas(Modifier.fillMaxSize()
             .pointerInput(selectedId, selectedPartKey, room, is3d, assemblies, cameraYaw, cameraPitch, cameraZoom) {
@@ -318,11 +319,28 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                     val rect = SceneHitTesting.bounds(listOf(q.x-18.dp.toPx() to q.y-18.dp.toPx(), q.x+18.dp.toPx() to q.y+18.dp.toPx()))!!
                     candidates += SceneHitTesting.score("opening:${item.id}", tap.x, tap.y, rect)
                 }
-                SceneHitTesting.choose(candidates, 30.dp.toPx())?.let { hitId ->
-                    if (hitId.startsWith("assembly-part:")) {
-                        val ids = hitId.removePrefix("assembly-part:").split(":", limit = 2)
+                val hit = SceneHitTesting.choose(candidates, 30.dp.toPx())
+                if (hit != null) {
+                    if (hit.startsWith("assembly-part:")) {
+                        val ids = hit.removePrefix("assembly-part:").split(":", limit = 2)
                         if (ids.size == 2) onSelectPart(ids[0], ids[1])
-                    } else onSelect(hitId)
+                    } else onSelect(hit)
+                } else {
+                    // Convert the empty-field tap back to room millimetres. In 3D the
+                    // placement plane is the floor (Z=0); in plan it is orthographic.
+                    val sx = (tap.x - cx) / if (is3d) (0.58f * scale) else scale
+                    val sy = (tap.y - cy) / if (is3d) (0.58f * scale * kotlin.math.sin(cameraPitch * PI.toFloat() / 180f).coerceAtLeast(0.08f)) else scale
+                    val roomX: Float
+                    val roomY: Float
+                    if (is3d) {
+                        val yawRad = cameraYaw * PI.toFloat() / 180f
+                        roomX = room.widthMm / 2f + sx * cos(yawRad) + sy * sin(yawRad)
+                        roomY = room.depthMm / 2f - sx * sin(yawRad) + sy * cos(yawRad)
+                    } else {
+                        roomX = room.widthMm / 2f + sx
+                        roomY = room.depthMm / 2f + sy
+                    }
+                    onPlaceFreePart(roomX.roundToInt(), roomY.roundToInt())
                 }
             }
         }) {
