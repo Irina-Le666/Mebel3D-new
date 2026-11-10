@@ -62,7 +62,7 @@ private val catalog = InteriorCatalogEngine.entries.map { entry ->
     })
 }
 
-private data class FreePartTool(val name: String, val glyph: String, val size: Size3Mm, val zMm: Int = 0, val materialId: String = "wood-oak")
+private data class FreePartTool(val name: String, val glyph: String, val size: Size3Mm, val zMm: Int = 0, val materialId: String = "wood-oak", val footprintShape: FurnitureFootprintShape = FurnitureFootprintShape.RECTANGLE)
 private val freePartTools = listOf(
     FreePartTool("Панель вертикальная", "▯", Size3Mm(600, 18, 2400)),
     FreePartTool("Панель горизонтальная", "▱", Size3Mm(600, 550, 18)),
@@ -73,7 +73,8 @@ private val freePartTools = listOf(
     FreePartTool("Выдвижной ящик", "▣", Size3Mm(500, 450, 160), 120),
     FreePartTool("Штанга", "━", Size3Mm(800, 25, 25), 1700, "metal-chrome"),
     FreePartTool("Цоколь", "▬", Size3Mm(600, 80, 100)),
-    FreePartTool("Брусок / опора", "▰", Size3Mm(50, 50, 900))
+    FreePartTool("Брусок / опора", "▰", Size3Mm(50, 50, 900)),
+    FreePartTool("Круглый предмет", "●", Size3Mm(700, 700, 450), 0, "wood-oak", FurnitureFootprintShape.CIRCLE)
 )
 
 @Composable
@@ -980,7 +981,7 @@ private fun FurnitureHome() {
                             val x = xMm.coerceIn(halfW, (room.widthMm - halfW).coerceAtLeast(halfW))
                             val y = yMm.coerceIn(halfD, (room.depthMm - halfD).coerceAtLeast(halfD))
                             val z = tool.zMm.coerceIn(0, (room.heightMm - tool.size.height).coerceAtLeast(0))
-                            val part = FurnitureItem(id, tool.name, tool.size, Vec3Mm(x, y, z), materialId = tool.materialId, roomId = room.id)
+                            val part = FurnitureItem(id, tool.name, tool.size, Vec3Mm(x, y, z), materialId = tool.materialId, roomId = room.id, footprintShape = tool.footprintShape)
                             publish(session.project.copy(furniture = session.project.furniture + part))
                             selectedId = id
                             selectedAssemblyId = null
