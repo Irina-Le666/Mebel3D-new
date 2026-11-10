@@ -103,6 +103,10 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                 var furnitureHeightHandleActive = false
                 var dragStartPointer = Offset.Zero
                 var dragPointer = Offset.Zero
+                var partDragRemainderX = 0f
+                var partDragRemainderY = 0f
+                var furnitureDragRemainderX = 0f
+                var furnitureDragRemainderY = 0f
                 var rotationGesture: ru.mebel3d.app.core.SceneGestureTransform.FurnitureGesture? = null
                 var heightGesture: ru.mebel3d.app.core.SceneGestureTransform.FurnitureGesture? = null
                 var furnitureGestureCenter = Offset.Zero
@@ -117,6 +121,8 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                     onDragStart()
                     dragStartPointer = start
                     dragPointer = start
+                    partDragRemainderX = 0f; partDragRemainderY = 0f
+                    furnitureDragRemainderX = 0f; furnitureDragRemainderY = 0f
                     val selectedFurniture = furniture.firstOrNull { it.id == selectedId }
                     if (selectedFurniture != null && selectedPartKey == null) {
                         val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
@@ -247,8 +253,14 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                             val partAngle = (part?.rotationDeg ?: 0) * PI.toFloat() / 180f
                             val localDx = worldDx * cos(partAngle) + worldDy * sin(partAngle)
                             val localDy = -worldDx * sin(partAngle) + worldDy * cos(partAngle)
-                            onResizeSelectedPart(ids[0], ids[1], localDx.toInt(), localDy.toInt())
-                        } else onMoveSelectedPart(ids[0], ids[1], worldDx.toInt(), worldDy.toInt())
+                            val delta = ru.mebel3d.app.core.DragDeltaAccumulator.consume(localDx, localDy, partDragRemainderX, partDragRemainderY)
+                            partDragRemainderX = delta.remainderX; partDragRemainderY = delta.remainderY
+                            if (delta.dxMm != 0 || delta.dyMm != 0) onResizeSelectedPart(ids[0], ids[1], delta.dxMm, delta.dyMm)
+                        } else {
+                            val delta = ru.mebel3d.app.core.DragDeltaAccumulator.consume(worldDx, worldDy, partDragRemainderX, partDragRemainderY)
+                            partDragRemainderX = delta.remainderX; partDragRemainderY = delta.remainderY
+                            if (delta.dxMm != 0 || delta.dyMm != 0) onMoveSelectedPart(ids[0], ids[1], delta.dxMm, delta.dyMm)
+                        }
                     } else if (selectedId != null) {
                         val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
                         if (furnitureResizeHandleActive) {
@@ -273,7 +285,9 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                             dxMm = dragAmount.x / scale
                             dyMm = dragAmount.y / scale
                         }
-                        onMoveSelected(dxMm.toInt(), dyMm.toInt())
+                        val delta = ru.mebel3d.app.core.DragDeltaAccumulator.consume(dxMm, dyMm, furnitureDragRemainderX, furnitureDragRemainderY)
+                        furnitureDragRemainderX = delta.remainderX; furnitureDragRemainderY = delta.remainderY
+                        if (delta.dxMm != 0 || delta.dyMm != 0) onMoveSelected(delta.dxMm, delta.dyMm)
                     }
                 }
             }
