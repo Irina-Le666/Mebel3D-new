@@ -1288,6 +1288,28 @@ private fun FurnitureHome() {
                             publish(updated); status = "Параметры детали применены"
                         }.onFailure { status = "Изменение детали отклонено: ${it.message}" }
                     }, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(6.dp)) { Text("Применить к детали", fontSize = 10.sp) }
+                    OutlinedButton(onClick = {
+                        runCatching {
+                            val assemblyId = selectedAssemblyId!!
+                            val sourceId = selectedAssemblyPartId!!
+                            val copyId = "part-" + java.util.UUID.randomUUID().toString()
+                            val updated = ProjectEditor.duplicateAssemblyPart(session.project, assemblyId, sourceId, copyId, 100)
+                            publish(updated)
+                            selectedAssemblyPartId = copyId
+                            val copy = updated.assemblies.first { it.id == assemblyId }.parts.first { it.id == copyId }
+                            width = copy.size.width.toString(); depth = copy.size.depth.toString(); height = copy.size.height.toString()
+                            posX = copy.localPosition.x.toString(); posY = copy.localPosition.y.toString(); posZ = copy.localPosition.z.toString(); angle = copy.rotationDeg.toString()
+                            status = "Создана независимая копия детали"
+                        }.onFailure { status = "Не удалось скопировать деталь: ${it.message}" }
+                    }, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(6.dp)) { Text("Копировать деталь", fontSize = 10.sp) }
+                    OutlinedButton(onClick = {
+                        runCatching {
+                            publish(ProjectEditor.removeAssemblyPart(session.project, selectedAssemblyId!!, selectedAssemblyPartId!!))
+                            selectedAssemblyId = null; selectedAssemblyPartId = null
+                            selected = "Объект не выбран"
+                            status = "Деталь удалена из сборки"
+                        }.onFailure { status = "Не удалось удалить деталь: ${it.message}" }
+                    }, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(6.dp)) { Text("Удалить деталь из сборки", fontSize = 10.sp) }
                     OutlinedButton(onClick = { runCatching { publish(ProjectEditor.rotateAssemblyPart(session.project, selectedAssemblyId!!, selectedAssemblyPartId!!, 90)); angle = ((angle.toInt()+90)%360).toString() }.onFailure { status = it.message ?: "Ошибка поворота" } }, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(6.dp)) { Text("Повернуть деталь 90°", fontSize = 10.sp) }
                     OutlinedButton(onClick = { selectedAssemblyId = null; selectedAssemblyPartId = null; selected = "Объект не выбран" }, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(6.dp)) { Text("Снять выбор детали", fontSize = 10.sp) }
                     Text("Материал выбранной детали", fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
