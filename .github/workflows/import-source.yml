@@ -30,7 +30,9 @@ jobs:
           test -d /tmp/mebel3d-source/mebel-next-real
           rsync -a --delete \
             --exclude='.git/' \
-            --exclude='mebel3d-new-project-2026-11-10-integration-audited.zip' \
+            --exclude='mebel3d-new-project-2026-11-10-integration-audited.zip' \\
+            --exclude='PROJECT_SCOPE_RU.md' \\
+            --exclude='.github/workflows/import-source.yml' \\
             /tmp/mebel3d-source/mebel-next-real/ ./
           test -s android/app/src/main/java/ru/mebel3d/app/MainActivity.kt
           test -s .github/workflows/android.yml
