@@ -308,8 +308,8 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                         val rx = lx*cos(angle)-ly*sin(angle); val ry = lx*sin(angle)+ly*cos(angle)
                         listOf(projectHit(x+rx, y+ry, z), projectHit(x+rx, y+ry, z+height))
                     }
-                    val rect = SceneHitTesting.bounds(points.map { it.x to it.y }, paddingPx = 7.dp.toPx())
-                    if (rect != null) candidates += SceneHitTesting.score(id, tap.x, tap.y, rect)
+                    SceneHitTesting.scorePolygon(id, tap.x, tap.y, points.map { it.x to it.y })
+                        ?.let { candidates += it }
                 }
                 furniture.forEach { item ->
                     // FurnitureItem.position is its footprint centre (the renderer and validator use this convention).
