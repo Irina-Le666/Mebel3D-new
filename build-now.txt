@@ -1,1 +1,1 @@
-Verify readable compact navigation and true-scale 2D room plan.
+Rerun full core and Android verification after updating Float-aware source assertion.
