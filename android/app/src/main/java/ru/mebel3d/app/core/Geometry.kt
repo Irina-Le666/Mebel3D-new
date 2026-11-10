@@ -287,12 +287,17 @@ object GeometryEngine {
     fun validateFurniture(room: RoomModel, furniture: List<FurnitureItem>): List<GeometryIssue> {
         val issues = mutableListOf<GeometryIssue>()
         furniture.forEach { item ->
-            val (footW, footD) = rotatedFootprint(item.size, item.rotationDeg)
-            val left = item.position.x.toLong() - footW.toLong() / 2L
-            val right = item.position.x.toLong() + footW.toLong() / 2L
-            val near = item.position.y.toLong() - footD.toLong() / 2L
-            val far = item.position.y.toLong() + footD.toLong() / 2L
-            if (left < 0L || near < 0L || right > room.widthMm.toLong() || far > room.depthMm.toLong())
+            // Validate the true rotated half-extents in millimetres. The rounded integer
+            // footprint is useful for labels, but must not decide whether a placement fits:
+            // rounding each full extent first can hide a fractional-mm boundary overflow.
+            val angle = Math.toRadians(item.rotationDeg.toDouble())
+            val halfWidth = (abs(cos(angle)) * item.size.width + abs(sin(angle)) * item.size.depth) / 2.0
+            val halfDepth = (abs(sin(angle)) * item.size.width + abs(cos(angle)) * item.size.depth) / 2.0
+            val left = item.position.x.toDouble() - halfWidth
+            val right = item.position.x.toDouble() + halfWidth
+            val near = item.position.y.toDouble() - halfDepth
+            val far = item.position.y.toDouble() + halfDepth
+            if (left < 0.0 || near < 0.0 || right > room.widthMm.toDouble() || far > room.depthMm.toDouble())
                 issues += GeometryIssue(GeometryIssueCode.OUT_OF_ROOM, "Объект «${item.name}» выходит за границы помещения", item.id)
             if (item.position.z < 0)
                 issues += GeometryIssue(GeometryIssueCode.BELOW_FLOOR, "Объект «${item.name}» ниже уровня пола", item.id)
