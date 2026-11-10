@@ -339,6 +339,36 @@ object ProjectEditor {
         return project.copy(assemblies = project.assemblies.filterNot { it.id == assemblyId })
     }
 
+    /** Creates an independent copy of one selected part with a new stable ID and offset. */
+    fun duplicateAssemblyPart(
+        project: ProjectModel, assemblyId: String, partId: String, newPartId: String, offsetMm: Int = 100
+    ): ProjectModel {
+        require(newPartId.isNotBlank() && offsetMm > 0) { "Нужен новый ID и положительное смещение копии" }
+        val assembly = project.assemblies.firstOrNull { it.id == assemblyId } ?: error("Сборка не найдена")
+        val source = assembly.parts.firstOrNull { it.id == partId } ?: error("Деталь не найдена")
+        require(assembly.parts.none { it.id == newPartId }) { "Деталь с таким ID уже существует" }
+        val copy = source.copy(
+            id = newPartId,
+            name = "${source.name} · копия",
+            localPosition = source.localPosition.copy(x = source.localPosition.x + offsetMm)
+        )
+        val updated = assembly.copy(parts = assembly.parts + copy)
+        require(GeometryEngine.validateAssembly(updated).isEmpty()) { "Копию нельзя разместить с выбранным смещением" }
+        return project.copy(assemblies = project.assemblies.map { if (it.id == assemblyId) updated else it })
+    }
+
+    /** Removes one independently editable part and any joints that referenced it. */
+    fun removeAssemblyPart(project: ProjectModel, assemblyId: String, partId: String): ProjectModel {
+        val assembly = project.assemblies.firstOrNull { it.id == assemblyId } ?: error("Сборка не найдена")
+        require(assembly.parts.any { it.id == partId }) { "Деталь не найдена" }
+        require(assembly.parts.size > 1) { "Нельзя удалить последнюю деталь сборки" }
+        val updated = assembly.copy(
+            parts = assembly.parts.filterNot { it.id == partId },
+            joints = assembly.joints.filterNot { it.firstPartId == partId || it.secondPartId == partId }
+        )
+        return project.copy(assemblies = project.assemblies.map { if (it.id == assemblyId) updated else it })
+    }
+
     fun replaceAssemblyPart(project: ProjectModel, assemblyId: String, part: FurniturePart): ProjectModel {
         val assembly = project.assemblies.firstOrNull { it.id == assemblyId } ?: error("Сборка не найдена")
         require(assembly.parts.any { it.id == part.id }) { "Деталь не найдена" }
