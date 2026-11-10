@@ -161,3 +161,35 @@ class GeometryEngineTest {
     }
 
 }
+
+
+    @Test fun planAndElevationSelectTheSameOpeningByItsStableId() {
+        val room = RoomModel(openings = listOf(
+            WallOpening("door-east", WallSide.EAST, 400, 900, 0, 2100, OpeningKind.DOOR)
+        ))
+        val drawings = RoomDrawingProjection.build(room, emptyList())
+        val plan = drawings.plan
+        val elevation = drawings.elevations.getValue(WallSide.EAST)
+        assertEquals("door-east", RoomDrawingSelection.selectPlanOpening(
+            plan, room.widthMm.toDouble(), 850.0, 25.0
+        ))
+        assertEquals("door-east", RoomDrawingSelection.selectElevationOpening(
+            elevation, 850.0, 1000.0
+        ))
+        assertEquals(null, RoomDrawingSelection.selectElevationOpening(
+            drawings.elevations.getValue(WallSide.WEST), 850.0, 1000.0
+        ))
+    }
+
+    @Test fun engineeringPointSelectionUsesWallElevationCoordinatesAndTolerance() {
+        val marker = EngineeringElement("water-east", "Вывод воды", EngineeringKind.WATER,
+            Vec3Mm(5000, 1250, 600), WallSide.EAST)
+        val drawings = RoomDrawingProjection.build(RoomModel(engineering = listOf(marker)), emptyList())
+        val east = drawings.elevations.getValue(WallSide.EAST)
+        assertEquals("water-east", RoomDrawingSelection.selectElevationEngineering(
+            east, 1260.0, 610.0, 20.0
+        ))
+        assertEquals(null, RoomDrawingSelection.selectElevationEngineering(
+            east, 1300.0, 650.0, 20.0
+        ))
+    }
