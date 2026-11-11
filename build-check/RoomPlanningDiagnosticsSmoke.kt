@@ -21,6 +21,13 @@ fun main() {
     check(RoomPlanningDiagnostics.inspect(room, listOf(item("water-block", 2500, 250))).any { it.kind == PlanningAdviceKind.BLOCKED_ENGINEERING_ACCESS }, "engineering access should be reported")
     check(RoomPlanningDiagnostics.inspect(room, listOf(item("not-water", 3500, 250))).none { it.kind == PlanningAdviceKind.BLOCKED_ENGINEERING_ACCESS }, "remote furniture should not block engineering")
     check(RoomPlanningDiagnostics.inspect(room, listOf(item("rotated", 1900, 350, w = 1000, d = 250, angle = 45))).any { it.kind == PlanningAdviceKind.BLOCKED_DOOR }, "rotated footprint should be tested")
+    val circleMiss = FurnitureItem("circle-miss", "Круглый стол", Size3Mm(700, 700, 750),
+        Vec3Mm(2200, 1200, 0), footprintShape = FurnitureFootprintShape.CIRCLE)
+    check(RoomPlanningDiagnostics.inspect(room, listOf(circleMiss)).none { it.relatedId == "door" },
+        "circle bounding-box corner overlap must not create a false door warning")
+    val circleHit = circleMiss.copy(id = "circle-hit", position = Vec3Mm(2000, 1100, 0))
+    check(RoomPlanningDiagnostics.inspect(room, listOf(circleHit)).any { it.relatedId == "door" },
+        "actual circular footprint overlap must still be reported")
     check(RoomPlanningDiagnostics.inspect(room, emptyList()).isEmpty(), "empty scene should have no advice")
     check(runCatching { RoomPlanningDiagnostics.inspect(room, emptyList(), doorClearanceMm = -1) }.isFailure, "negative clearance must be rejected")
     check(RoomPlanningDiagnostics.inspect(room, listOf(item("touch-edge", 1450, 1300))).none { it.kind == PlanningAdviceKind.BLOCKED_DOOR }, "edge contact beyond clearance should not be reported")
