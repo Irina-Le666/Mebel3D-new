@@ -268,9 +268,9 @@ object ProjectEditor {
     fun furnitureClearances(project: ProjectModel, itemId: String): Map<WallSide, Int> {
         val item = project.furniture.firstOrNull { it.id == itemId } ?: error("Объект мебели не найден")
         val room = project.rooms.firstOrNull { it.id == item.roomId } ?: error("Помещение не найдено")
-        val swapped = item.rotationDeg % 180 != 0
-        val halfW = (if (swapped) item.size.depth else item.size.width) / 2
-        val halfD = (if (swapped) item.size.width else item.size.depth) / 2
+        val (footprintWidth, footprintDepth) = GeometryEngine.rotatedFootprint(item)
+        val halfW = footprintWidth / 2
+        val halfD = footprintDepth / 2
         return mapOf(
             WallSide.WEST to item.position.x - halfW,
             WallSide.EAST to room.widthMm - item.position.x - halfW,
