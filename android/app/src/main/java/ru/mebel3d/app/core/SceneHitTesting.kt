@@ -91,6 +91,12 @@ object SceneHitTesting {
         return inside
     }
 
+    /** True when a pointer is on the visible shape or within its forgiving touch radius. */
+    fun isTouchable(hit: SceneHit?, maxDistancePx: Float = 30f): Boolean {
+        if (hit == null || !maxDistancePx.isFinite() || maxDistancePx < 0f) return false
+        return hit.inside || hit.distanceSquared <= maxDistancePx * maxDistancePx
+    }
+
     fun choose(hits: List<SceneHit>, maxDistancePx: Float = 30f): String? {
         if (maxDistancePx < 0f) return null
         val limit = maxDistancePx * maxDistancePx
