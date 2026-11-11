@@ -98,6 +98,16 @@ object RoomPlanningDiagnostics {
 
     private fun intersects(item: FurnitureItem, rect: Rect): Boolean {
         if (rect.left >= rect.right || rect.top >= rect.bottom) return false
+        if (item.footprintShape == FurnitureFootprintShape.CIRCLE) {
+            // Circular furniture is a disk, not its square bounding box. Testing the
+            // nearest point avoids false warnings when only the box corners overlap.
+            val radius = item.size.width / 2.0
+            val nearestX = item.position.x.toDouble().coerceIn(rect.left, rect.right)
+            val nearestY = item.position.y.toDouble().coerceIn(rect.top, rect.bottom)
+            val dx = item.position.x - nearestX
+            val dy = item.position.y - nearestY
+            return dx * dx + dy * dy < radius * radius
+        }
         val angle = Math.toRadians(item.rotationDeg.toDouble())
         val c = cos(angle); val s = sin(angle)
         val hw = item.size.width / 2.0; val hd = item.size.depth / 2.0
