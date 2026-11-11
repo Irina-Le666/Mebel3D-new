@@ -171,6 +171,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                             Offset(cx + (dx*cos(yaw)-dy*sin(yaw))*scale*0.58f, cy + (dx*sin(yaw)+dy*cos(yaw))*scale*0.58f*kotlin.math.sin(cameraPitch * PI.toFloat() / 180f) - (selectedFurniture.position.z + selectedFurniture.size.height)*scale*0.58f*kotlin.math.cos(cameraPitch * PI.toFloat() / 180f))
                         } else Offset(cx - room.widthMm*scale*0.5f + cornerX*scale, cy - room.depthMm*scale*0.5f + cornerY*scale)
                         furnitureResizeHandleActive = (start-handle).getDistance() < 32.dp.toPx()
+                        furnitureDragActive = furnitureDragActive || furnitureRotationHandleActive || furnitureHeightHandleActive || furnitureResizeHandleActive
                     }
                     val key = selectedPartKey
                     if (key != null) {
@@ -216,6 +217,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                             }
                             if (partHeightHandleActive) partHeightGesture = ru.mebel3d.app.core.AssemblyPartGestureTransform.begin(assembly, part, 1f, 0f)
                             resizeHandleActive = !partRotationHandleActive && !partHeightHandleActive && (start-handle).getDistance() < 30.dp.toPx()
+                            partDragActive = partDragActive || partRotationHandleActive || partHeightHandleActive || resizeHandleActive
                         }
                     }
                 }, onDragEnd = { onDragEnd(); furnitureRotationHandleActive = false; furnitureHeightHandleActive = false; partRotationHandleActive = false; partHeightHandleActive = false; rotationGesture = null; heightGesture = null; partRotationGesture = null; partHeightGesture = null }, onDragCancel = { onDragCancel(); furnitureRotationHandleActive = false; furnitureHeightHandleActive = false; partRotationHandleActive = false; partHeightHandleActive = false; rotationGesture = null; heightGesture = null; partRotationGesture = null; partHeightGesture = null }) { change, dragAmount ->
