@@ -15,6 +15,17 @@ fun main() {
     val padded = SceneHitTesting.bounds(listOf(10f to 10f, 20f to 20f), 5f)!!
     check(padded.left == 5f && padded.bottom == 25f)
 
+    val thinShelf = SceneHitTesting.scorePolygon("shelf", 50f, 14f,
+        listOf(10f to 10f, 90f to 10f, 90f to 12f, 10f to 12f))!!
+    check(!thinShelf.inside)
+    check(SceneHitTesting.isTouchable(thinShelf, 3f))
+    check(!SceneHitTesting.isTouchable(thinShelf, 1f))
+    check(SceneHitTesting.isTouchable(SceneHitTesting.scorePolygon("shelf", 50f, 11f,
+        listOf(10f to 10f, 90f to 10f, 90f to 12f, 10f to 12f)), 0f))
+    check(!SceneHitTesting.isTouchable(null))
+    check(!SceneHitTesting.isTouchable(thinShelf, Float.NaN))
+    check(!SceneHitTesting.isTouchable(thinShelf, -1f))
+
     val diamond = listOf(50f to 0f, 100f to 50f, 50f to 100f, 0f to 50f)
     val diamondCenter = SceneHitTesting.scorePolygon("diamond", 50f, 50f, diamond)!!
     check(diamondCenter.inside)
