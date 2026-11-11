@@ -101,6 +101,8 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                 var furnitureResizeHandleActive = false
                 var furnitureRotationHandleActive = false
                 var furnitureHeightHandleActive = false
+                var furnitureDragActive = false
+                var partDragActive = false
                 var dragStartPointer = Offset.Zero
                 var dragPointer = Offset.Zero
                 var partDragRemainderX = 0f
@@ -126,7 +128,22 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                     partDragRemainderX = 0f; partDragRemainderY = 0f
                     furnitureDragRemainderX = 0f; furnitureDragRemainderY = 0f
                     val selectedFurniture = furniture.firstOrNull { it.id == selectedId }
+                    furnitureDragActive = false
+                    partDragActive = false
                     if (selectedFurniture != null && selectedPartKey == null) {
+                        val hitScale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
+                        val hitCx = size.width * 0.5f; val hitCy = sceneCenterY(size.height.toFloat(), room, hitScale, cameraYaw, cameraPitch, is3d)
+                        val hitYaw = cameraYaw * PI.toFloat() / 180f
+                        fun projectFurnitureHit(x: Float, y: Float, z: Float): Offset {
+                            if (!is3d) return Offset(hitCx-room.widthMm*hitScale*0.5f+x*hitScale, hitCy-room.depthMm*hitScale*0.5f+y*hitScale)
+                            val dx=x-room.widthMm/2f; val dy=y-room.depthMm/2f
+                            return Offset(hitCx+(dx*cos(hitYaw)-dy*sin(hitYaw))*hitScale*0.58f, hitCy+(dx*sin(hitYaw)+dy*cos(hitYaw))*hitScale*0.58f*kotlin.math.sin(cameraPitch*PI.toFloat()/180f)-z*hitScale*0.58f*kotlin.math.cos(cameraPitch*PI.toFloat()/180f))
+                        }
+                        val angle=selectedFurniture.rotationDeg*PI.toFloat()/180f
+                        val corners=listOf(-selectedFurniture.size.width/2f to -selectedFurniture.size.depth/2f, selectedFurniture.size.width/2f to -selectedFurniture.size.depth/2f, selectedFurniture.size.width/2f to selectedFurniture.size.depth/2f, -selectedFurniture.size.width/2f to selectedFurniture.size.depth/2f)
+                        val silhouette=corners.flatMap { (lx,ly) -> val rx=lx*cos(angle)-ly*sin(angle); val ry=lx*sin(angle)+ly*cos(angle); listOf(projectFurnitureHit(selectedFurniture.position.x+rx,selectedFurniture.position.y+ry,selectedFurniture.position.z.toFloat()),projectFurnitureHit(selectedFurniture.position.x+rx,selectedFurniture.position.y+ry,(selectedFurniture.position.z+selectedFurniture.size.height).toFloat())) }
+                        val hit=SceneHitTesting.scorePolygon(selectedFurniture.id,start.x,start.y,silhouette.map { it.x to it.y })
+                        furnitureDragActive=hit != null && (hit.inside || hit.distanceSquared <= 30.dp.toPx()*30.dp.toPx())
                         val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
                         val cx = size.width * 0.5f; val cy = sceneCenterY(size.height.toFloat(), room, scale, cameraYaw, cameraPitch, is3d)
                         val yaw = cameraYaw * PI.toFloat() / 180f
@@ -161,6 +178,15 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                         val part = assemblies.firstOrNull { it.id == ids[0] }?.parts?.firstOrNull { it.id == ids.getOrNull(1) }
                         val assembly = assemblies.firstOrNull { it.id == ids[0] }
                         if (part != null && assembly != null) {
+                            val hitScale=roomSceneScale(size.width.toFloat(),size.height.toFloat(),room,cameraYaw,cameraPitch,cameraZoom,is3d)
+                            val hitCx=size.width*0.5f; val hitCy=sceneCenterY(size.height.toFloat(),room,hitScale,cameraYaw,cameraPitch,is3d)
+                            val hitYaw=cameraYaw*PI.toFloat()/180f
+                            fun projectPartHit(x:Float,y:Float,z:Float):Offset { if(!is3d) return Offset(hitCx-room.widthMm*hitScale*0.5f+x*hitScale,hitCy-room.depthMm*hitScale*0.5f+y*hitScale); val dx=x-room.widthMm/2f; val dy=y-room.depthMm/2f; return Offset(hitCx+(dx*cos(hitYaw)-dy*sin(hitYaw))*hitScale*0.58f,hitCy+(dx*sin(hitYaw)+dy*cos(hitYaw))*hitScale*0.58f*kotlin.math.sin(cameraPitch*PI.toFloat()/180f)-z*hitScale*0.58f*kotlin.math.cos(cameraPitch*PI.toFloat()/180f)) }
+                            val a=part.rotationDeg*PI.toFloat()/180f; val pcx=assembly.position.x+part.localPosition.x+part.size.width/2f; val pcy=assembly.position.y+part.localPosition.y+part.size.depth/2f
+                            val corners=listOf(-part.size.width/2f to -part.size.depth/2f,part.size.width/2f to -part.size.depth/2f,part.size.width/2f to part.size.depth/2f,-part.size.width/2f to part.size.depth/2f)
+                            val silhouette=corners.flatMap{(lx,ly)->val rx=lx*cos(a)-ly*sin(a);val ry=lx*sin(a)+ly*cos(a);listOf(projectPartHit(pcx+rx,pcy+ry,(assembly.position.z+part.localPosition.z).toFloat()),projectPartHit(pcx+rx,pcy+ry,(assembly.position.z+part.localPosition.z+part.size.height).toFloat()))}
+                            val hit=SceneHitTesting.scorePolygon("part",start.x,start.y,silhouette.map{it.x to it.y})
+                            partDragActive=hit!=null&&(hit.inside||hit.distanceSquared<=30.dp.toPx()*30.dp.toPx())
                             val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
                             val cx = size.width * 0.5f; val cy = sceneCenterY(size.height.toFloat(), room, scale, cameraYaw, cameraPitch, is3d)
                             val partCx = assembly.position.x + part.localPosition.x + part.size.width / 2f
@@ -214,7 +240,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                         }
                         return@detectDragGestures
                     }
-                    if (selectedPartKey != null) {
+                    if (selectedPartKey != null && partDragActive) {
                         val ids = selectedPartKey.split(":", limit = 2)
                         val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
                         if (partRotationHandleActive && ids.size == 2) {
@@ -263,7 +289,7 @@ fun RoomCanvas(room: RoomModel, furniture: List<FurnitureItem>, selectedId: Stri
                             partDragRemainderX = delta.remainderX; partDragRemainderY = delta.remainderY
                             if (delta.dxMm != 0 || delta.dyMm != 0) onMoveSelectedPart(ids[0], ids[1], delta.dxMm, delta.dyMm)
                         }
-                    } else if (selectedId != null) {
+                    } else if (selectedId != null && furnitureDragActive) {
                         val scale = roomSceneScale(size.width.toFloat(), size.height.toFloat(), room, cameraYaw, cameraPitch, cameraZoom, is3d)
                         if (furnitureResizeHandleActive) {
                             val item = furniture.firstOrNull { it.id == selectedId }
